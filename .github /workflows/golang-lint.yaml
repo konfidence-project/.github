@@ -1,5 +1,6 @@
 name: Golang CI Lint
 
+on: workflow_call
 jobs:
   lint:
     name: Run on Ubuntu

@@ -1,6 +1,6 @@
 name: Kubebuilder Tests
 
-
+on: workflow_call
 jobs:
   test:
     name: Run on Ubuntu
