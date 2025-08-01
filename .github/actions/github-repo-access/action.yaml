@@ -11,8 +11,8 @@ runs:
         app-id: 1702387
         private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
         owner: ${{ github.repository_owner }}
-        
-    - name: Persist GitHub App Token
+
+    - name: Persist GitHub App Token for Job
       shell: bash
       run: |
         echo "GH_TOKEN=${{ steps.generate-token.outputs.token }}" >> $GITHUB_ENV
