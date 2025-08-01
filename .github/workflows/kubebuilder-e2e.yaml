@@ -1,5 +1,5 @@
 name: Kubebuilder E2E Tests
-
+on: workflow_call
 jobs:
   kubebuilder-e2e:
     name: Run on Ubuntu
