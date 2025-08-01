@@ -1,0 +1,26 @@
+name: "GitHub Repo Access"
+description: "Sets up GitHub CLI authentication for private repositories inside this org (konfidence-project)"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate GitHub App Token
+      id: generate-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: 1702387
+        private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+        
+    - name: Persist GitHub App Token
+      shell: bash
+      run: |
+        echo "GH_TOKEN=${{ steps.generate-token.outputs.token }}" >> $GITHUB_ENV
+
+    - name: Setup GitHub CLI authentication
+      shell: bash
+      run: |
+        # Configure GitHub CLI authentication
+        echo "Setting up GitHub CLI authentication..."
+        gh auth status
+        gh auth setup-git
