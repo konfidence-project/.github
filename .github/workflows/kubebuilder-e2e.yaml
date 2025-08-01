@@ -1,0 +1,46 @@
+name: Kubebuilder E2E Tests
+
+jobs:
+  kubebuilder-e2e:
+    name: Run on Ubuntu
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/konfidence-project
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: 1702387
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Setup Go with private repos
+        uses: ./.github/actions/setup-go
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+      - name: Install the latest version of kind
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      - name: Verify kind installation
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: kind version
+
+      - name: Running Kubebuilder E2E Tests
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          go mod tidy
+          make test-e2e 

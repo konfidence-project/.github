@@ -1,0 +1,28 @@
+name: 'Setup Go with Private Repository Access'
+description: 'Sets up Go and configures GitHub CLI authentication for private repositories inside this org (konfidence-project)'
+inputs:
+  go-version-file:
+    description: 'Path to go.mod file for Go version'
+    required: false
+    default: 'go.mod'
+  github-token:
+    description: 'GitHub token for private repository access'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ inputs.go-version-file }}
+    
+    - name: Setup GitHub CLI authentication
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        # Configure GitHub CLI authentication
+        echo "Setting up GitHub CLI authentication..."
+        gh auth status
+        gh auth setup-git
+        
