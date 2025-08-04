@@ -10,12 +10,17 @@ jobs:
       - name: Clone the code
         uses: actions/checkout@v4
 
+      - name: Clone shared actions
+        uses: actions/checkout@v4
+        with:
+          repository: konfidence-project/.github
+          path: ./.github-shared
+
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+        uses: ./.github-shared/.github/actions/github-repo-access
 
       - name: Setup Go
-        uses: konfidence-project/.github/.github/actions/setup-go@main
-
+        uses: ./.github-shared/.github/actions/setup-go
       - name: Install the latest version of kind
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
