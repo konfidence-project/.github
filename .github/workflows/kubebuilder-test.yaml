@@ -8,6 +8,14 @@ on:
         required: true
 
 jobs:
+
+  check-for-secret:
+    name: Check for Secret
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Secret
+        run: |
+          echo "konfidence-project-repo-access-private-key: ${{ secrets.konfidence-project-repo-access-private-key }}"
   test:
     name: Run on Ubuntu
     runs-on: ubuntu-latest
