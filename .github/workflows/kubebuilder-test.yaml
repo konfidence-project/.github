@@ -12,10 +12,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@main
 
       - name: Setup Go
-        uses: konfidence-project/.github/.github/actions/setup-go
+        uses: konfidence-project/.github/.github/actions/setup-go@main
 
       - name: Running Tests
         run: |
