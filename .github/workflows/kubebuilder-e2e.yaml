@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOPRIVATE: github.com/konfidence-project
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
 
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@main
-        env:
-          KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-
+    
+         
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@main
 
