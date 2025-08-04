@@ -9,13 +9,6 @@ on:
 
 jobs:
 
-  check-for-secret:
-    name: Check for Secret
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check for Secret
-        run: |
-          echo "konfidence-project-repo-access-private-key: ${{ secrets.konfidence-project-repo-access-private-key }}"
   test:
     name: Run on Ubuntu
     runs-on: ubuntu-latest
@@ -28,7 +21,7 @@ jobs:
     - name: Setup GitHub Repo Access
       uses: konfidence-project/.github/.github/actions/github-repo-access@main
       with:
-        private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+        private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
 
     - name: Setup Go
       uses: konfidence-project/.github/.github/actions/setup-go@main
