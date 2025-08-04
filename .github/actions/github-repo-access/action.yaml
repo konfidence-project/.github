@@ -1,6 +1,7 @@
 name: "GitHub Repo Access"
 description: "Sets up GitHub CLI authentication for private repositories inside this org (konfidence-project)"
 
+
 runs:
   using: "composite"
   steps:
