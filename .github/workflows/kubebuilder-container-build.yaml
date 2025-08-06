@@ -7,6 +7,7 @@ on:
         description: 'Container image name (without registry/tag)'
         required: true
         type: string
+        default: ${{ github.repository }}
       registry:
         description: 'Container registry URL'
         required: false
@@ -101,6 +102,6 @@ jobs:
           file: ${{ inputs.dockerfile }}
           platforms: ${{ inputs.platforms }}
           push: ${{ inputs.push }}
-          tags: ${{ inputs.image-name }}-dev-${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ inputs.image-name }}:${{ github.sha }}
        
 
