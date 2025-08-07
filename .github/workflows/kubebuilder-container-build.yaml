@@ -31,9 +31,9 @@ on:
       image-digest:
         description: 'SHA digest of the built image'
         value: ${{ jobs.build.outputs.digest }}
-      image-tags:
-        description: 'Full image tags that were built'
-        value: ${{ jobs.build.outputs.tags }}
+      version:
+        description: 'Version that was created'
+        value: ${{ jobs.version.outputs.version }}
     secrets:
       konfidence-project-repo-access-private-key:
         description: 'Private key for konfidence-project GitHub App'
@@ -44,9 +44,14 @@ env:
   IMAGE_NAME: ${{ inputs.image-name }}
 
 jobs:
-  build-and-push:
+  
+  version:
+    uses: "konfidence-project/.github/.github/actions/calculate-next-version@main"
+   
+  build:
     name: Build and Push Container Image
     runs-on: ubuntu-latest
+    needs: version
     outputs:
       digest: ${{ steps.build.outputs.digest }}
       tags: ${{ steps.build.outputs.tags }}
@@ -90,6 +95,7 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/manager cmd/main.go
 
+
       - name: Build and push container image
         id: build
         uses: docker/build-push-action@v6
@@ -98,6 +104,17 @@ jobs:
           file: ${{ inputs.dockerfile }}
           platforms: linux/amd64
           push: ${{ inputs.push }}
-          tags: ${{ env.REGISTRY }}/${{ inputs.image-name }}:${{ github.sha }}
-       
+          tags: ${{ env.REGISTRY }}/${{ inputs.image-name }}:${{ needs.version.outputs.version }}
+      
+      - name: Create tag
+        if: ${{ steps.build.outputs.imageid }}
+        id: create-tag
+        uses: "konfidence-project/.github/.github/actions/create-tag@main"
+        with:
+          version: ${{ needs.version.outputs.version }}
 
+      - name: Create release
+        if: ${{ steps.build.outputs.imageid }}
+        uses: "konfidence-project/.github/.github/actions/create-release@main"
+        with:
+          version: ${{ needs.version.outputs.version }}
