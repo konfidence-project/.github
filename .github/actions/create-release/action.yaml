@@ -1,0 +1,22 @@
+name: "Create release"
+description: "Creates a new release based on the version"
+
+inputs:
+  version:
+    description: "The version to create a release for"
+    required: true
+
+outputs:
+  release:
+    description: "The release that was created"
+    value: ${{ steps.create-release.outputs.release }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create release
+      shell: bash
+      id: create-release
+      run: |
+        gh release create ${{ inputs.version }} --verify-tag
+        

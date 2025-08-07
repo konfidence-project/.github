@@ -1,0 +1,26 @@
+name: "Create tag"
+description: "Creates a new tag based on the version"
+
+inputs:
+  version:
+    description: "The version to create a tag for"
+    required: true
+
+outputs:
+  tag:
+    description: "The tag that was created"
+    value: ${{ steps.create-tag.outputs.tag }}
+
+runs:
+  using: "composite"
+  steps:    
+    - name: Create tag
+      shell: bash
+      id: create-tag
+      run: |
+        git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
+        git push origin ${{ inputs.version }}
+
+    - name: Persist tag
+      shell: bash
+      run: echo "tag=${{ steps.create-tag.outputs.tag }}" >> $GITHUB_OUTPUT
