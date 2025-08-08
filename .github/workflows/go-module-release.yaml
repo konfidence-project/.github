@@ -2,12 +2,6 @@ name: Go Module Build and Release
 
 on: 
   workflow_call:
-    inputs:
-      push:
-        description: 'Whether to create the release (true for main branch)'
-        required: false
-        type: boolean
-        default: true
     outputs:
       version:
         description: 'Version that was created'
