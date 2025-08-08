@@ -1,0 +1,128 @@
+name: Kubebuilder Container Build and Release
+
+on: 
+  workflow_call:
+    inputs:
+      image-name:
+        description: 'Container image name (without registry/tag)'
+        type: string
+        default: ${{ github.repository }}
+      registry:
+        description: 'Container registry URL'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      push:
+        description: 'Whether to push the built image'
+        required: false
+        type: boolean
+        default: true
+      dockerfile:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      context:
+        description: 'Build context path'
+        required: false
+        type: string
+        default: '.'
+    outputs:
+      image-digest:
+        description: 'SHA digest of the built image'
+        value: ${{ jobs.build.outputs.digest }}
+      version:
+        description: 'Version that was created'
+        value: ${{ jobs.version.outputs.version }}
+    secrets:
+      konfidence-project-repo-access-private-key:
+        description: 'Private key for konfidence-project GitHub App'
+        required: true
+
+env:
+  REGISTRY: ${{ inputs.registry }}
+  IMAGE_NAME: ${{ inputs.image-name }}
+
+jobs: 
+  version:
+    name: Determine next version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semantic-release.outputs.version }}
+      new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
+    permissions:
+      contents: read
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup GitHub Repo Access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+        with:
+          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
+          
+      - name: Run semantic-release (dry-run)
+        id: semantic-release
+        uses: "konfidence-project/.github/.github/actions/semantic-release@main"
+        with:
+          dry-run: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    name: Build and Push Container Image
+    runs-on: ubuntu-latest
+    needs: version
+    if: ${{ needs.version.outputs.new-release-published == 'true' }}
+   
+    outputs:
+      digest: ${{ steps.docker-build.outputs.image-digest }}
+      tags: ${{ steps.docker-build.outputs.tags }}
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build and Push Docker Image
+        id: docker-build
+        uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@main
+        with:
+          image-name: ${{ inputs.image-name }}
+          registry: ${{ inputs.registry }}
+          version: ${{ needs.version.outputs.version }}
+          push: ${{ inputs.push }}
+          dockerfile: ${{ inputs.dockerfile }}
+          context: ${{ inputs.context }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [version, build]
+    if: ${{ needs.build.outputs.digest && needs.version.outputs.new-release-published == 'true' }}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup GitHub Repo Access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+        with:
+          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
+          
+      - name: Run semantic-release (create release)
+        uses: "konfidence-project/.github/.github/actions/semantic-release@main"
+        with:
+          dry-run: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
