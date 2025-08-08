@@ -28,7 +28,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 'lts/*'
-        cache: 'npm'
 
     - name: Install semantic-release
       shell: bash
