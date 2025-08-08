@@ -23,8 +23,8 @@ jobs:
       issues: write
       pull-requests: write
     outputs:
-      version: ${{ steps.semantic-release.outputs.version }}
-      new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+      new-release-published: ${{ steps.semantic.outputs.new_release_published }}
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
@@ -40,9 +40,15 @@ jobs:
         uses: konfidence-project/.github/.github/actions/setup-go@main
 
           
-      - name: Run semantic-release (create release)
-        uses: konfidence-project/.github/.github/actions/semantic-release@main
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
         with:
           dry-run: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra_plugins: |
+            @semantic-release/commit-analyzer 
+            @semantic-release/release-notes-generator 
+            @semantic-release/github 
+            @semantic-release/git
+          
         
