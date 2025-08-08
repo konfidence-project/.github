@@ -50,11 +50,11 @@ runs:
           echo "Running semantic-release in dry-run mode..."
           
           # Run semantic-release in dry-run mode to get next version
-          npx semantic-release --dry-run
+          npx semantic-release --dry-run --branch ${{ github.ref }}
           
-          echo "debug: $(nextRelease)"
+          echo "debug: $nextRelease"
           # Extract the next version from output
-          NEXT_VERSION=$(nextRelease.version)
+          NEXT_VERSION=$nextRelease.version
           
           if [[ -n "$NEXT_VERSION" ]]; then
             echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
