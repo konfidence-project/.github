@@ -5,52 +5,26 @@ on:
     outputs:
       version:
         description: 'Version that was created'
-        value: ${{ jobs.version.outputs.version }}
+        value: ${{ jobs.release.outputs.version }}
       new-release-published:
         description: 'Whether a new release was published'
-        value: ${{ jobs.version.outputs.new-release-published }}
+        value: ${{ jobs.release.outputs.new-release-published }}
     secrets:
       konfidence-project-repo-access-private-key:
         description: 'Private key for konfidence-project GitHub App'
         required: true
 
 jobs: 
-  version:
-    name: Determine next version
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.semantic-release.outputs.version }}
-      new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
-    permissions:
-      contents: read
-    steps:
-      - name: Clone the code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
-      - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@main
-        with:
-          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
-          
-      - name: Run semantic-release (dry-run)
-        id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@main
-        with:
-          dry-run: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
- 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [version]
-    if: ${{ needs.version.outputs.new-release-published == 'true' }}
     permissions:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      version: ${{ steps.semantic-release.outputs.version }}
+      new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
@@ -71,3 +45,4 @@ jobs:
         with:
           dry-run: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        
