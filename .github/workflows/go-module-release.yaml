@@ -39,12 +39,22 @@ jobs:
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@main
 
+      - name: Check for semantic release config
+        run: |
+          if [ ! -f ".releaserc.json" ]; then
+            echo ".releaserc.json not found"
+            exit 1
+          else
+            echo ".releaserc.json found:"
+            cat .releaserc.json
+          fi
           
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v4
+        env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          dry-run: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          dry_run: false
           extra_plugins: |
             @semantic-release/commit-analyzer 
             @semantic-release/release-notes-generator 
