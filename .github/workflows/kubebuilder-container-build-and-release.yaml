@@ -48,8 +48,8 @@ jobs:
     name: Determine next version
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.semantic-release.outputs.version }}
-      new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
+      version: ${{ steps.semantic-release-dry-run.outputs.version }}
+      new-release-published: ${{ steps.semantic-release-dry-run.outputs.new-release-published }}
     permissions:
       contents: read
     steps:
@@ -63,12 +63,11 @@ jobs:
         with:
           private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
           
-      - name: Run semantic-release (dry-run)
-        id: semantic-release
-        uses: "konfidence-project/.github/.github/actions/semantic-release@main"
+      - name: Semantic Release (dry-run)
+        id: semantic-release-dry-run
+        uses: konfidence-project/.github/.github/actions/semantic-release@main
         with:
           dry-run: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     name: Build and Push Container Image
@@ -122,8 +121,6 @@ jobs:
         with:
           private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
           
-      - name: Run semantic-release (create release)
-        uses: "konfidence-project/.github/.github/actions/semantic-release@main"
-        with:
-          dry-run: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Semantic Release (create release)
+        id: semantic-release
+        uses: konfidence-project/.github/.github/actions/semantic-release@main

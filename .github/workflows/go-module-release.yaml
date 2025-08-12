@@ -24,8 +24,8 @@ jobs:
       pull-requests: write
       id-token: write
     outputs:
-      version: ${{ steps.semantic.outputs.new_release_version }}
-      new-release-published: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic-release.outputs.new-release-version }}
+      new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
@@ -40,24 +40,8 @@ jobs:
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@main
 
-      - name: Check for semantic release config
-        run: |
-          if [ ! -f ".releaserc.json" ]; then
-            echo ".releaserc.json not found"
-            exit 1
-          else
-            echo ".releaserc.json found:"
-            cat .releaserc.json
-          fi
-          
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          dry_run: false
-          extra_plugins: |
-            @semantic-release/commit-analyzer 
-            @semantic-release/release-notes-generator 
-            @semantic-release/github 
-            @semantic-release/git
-          
-        
+        id: semantic-release
+        uses: konfidence-project/.github/.github/actions/semantic-release-setup@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
