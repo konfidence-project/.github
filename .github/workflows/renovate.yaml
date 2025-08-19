@@ -42,7 +42,7 @@ jobs:
         id: github-repo-access
         uses: konfidence-project/.github/.github/actions/github-repo-access@main
         with:
-          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       # Restore previous repository cache (artifact-based)
       - name: Download previous cache artifact
