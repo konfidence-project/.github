@@ -68,11 +68,21 @@ jobs:
             echo "No previous cache found."
           fi
 
+      - name: Check for renovate-config/config.js
+        run: |
+          pwd
+          ls -la
+          ls -la renovate-config
+          if [ ! -f renovate-config/config.js ]; then
+            echo "Error: renovate-config/config.js not found"
+            exit 1
+          fi
+
       # Run Renovate
       - name: Renovate Bot GitHub Action
         uses: renovatebot/github-action@v43.0.8
         with:
-          configurationFile: renovate-config/config.json
+          configurationFile: renovate-config/config.js
           token: ${{ env.GH_TOKEN }}
         env:
           LOG_LEVEL: info
