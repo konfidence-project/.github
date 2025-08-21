@@ -85,7 +85,7 @@ jobs:
           configurationFile: renovate-config/config.js
           token: ${{ env.GH_TOKEN }}
         env:
-          LOG_LEVEL: debug
+          LOG_LEVEL: info
           # Enable repository cache (self-hosted option; can be set via env)
           RENOVATE_REPOSITORY_CACHE: enabled
           RENOVATE_TOKEN: ${{ env.GH_TOKEN }}

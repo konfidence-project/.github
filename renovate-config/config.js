@@ -1,6 +1,5 @@
 module.exports = {
     platform: 'github',
-    repositories: ["konfidence-project/konfidence-docs"],
     autodiscover: true,
     // autodiscoverFilter: ['.*'],
     onboarding: true,
