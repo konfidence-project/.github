@@ -19,3 +19,7 @@ runs:
       shell: bash
       run: |
         vendir sync
+    - name: Print vendir sync output
+      shell: bash
+      run: |
+        tree
