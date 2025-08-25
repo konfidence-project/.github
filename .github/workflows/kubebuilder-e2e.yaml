@@ -24,6 +24,9 @@ jobs:
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@main
 
+      - name: Sync vendir dependencies
+        uses: konfidence-project/.github/.github/actions/vendir-sync@main
+
       - name: Install the latest version of kind
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
