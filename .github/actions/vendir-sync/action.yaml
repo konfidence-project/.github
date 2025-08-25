@@ -18,7 +18,7 @@ runs:
     - name: Sync vendir dependencies
       shell: bash
       run: |
-        vendir sync
+        make vendir-sync
     - name: Print vendir sync output
       shell: bash
       run: |
