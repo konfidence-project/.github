@@ -42,6 +42,7 @@ jobs:
           repository: konfidence-project/crds
           ref: ${{ inputs.crds-version }}
           path: crds
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install the latest version of kind
         run: |
