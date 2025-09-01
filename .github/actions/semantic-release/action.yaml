@@ -51,26 +51,9 @@ runs:
         
         # If no config file found, create the default config inline
         if [ "$config_found" = false ]; then
-          echo "No semantic release config found. Creating default config for Go Modules (i.e. only create git tags, no publishing to npm)..."
+          echo "No semantic release config found. Please create a semantic release config file!"
           
-          # Create the default semantic release configuration
-          cat > .releaserc.json << -'EOF'
-          {
-              "branches": [
-                "main"
-              ],
-              "plugins": [
-                "@semantic-release/commit-analyzer",
-                "@semantic-release/release-notes-generator",
-                "@semantic-release/git",
-                "@semantic-release/github"
-              ]
-            }
-          EOF
-          
-          echo "Created default .releaserc.json with the following contents:"
-          cat .releaserc.json
-          config_file=".releaserc.json"
+          exit 1
         fi
         
         # Set outputs
