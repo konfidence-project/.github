@@ -52,6 +52,11 @@ jobs:
 
       - name: Verify kind installation
         run: kind version
+      
+      - name: Create Kind Cluster
+        run: |
+          kind create cluster --name kind-integration-test  
+          kubectl cluster-info --context kind-kind-integration-test
 
       - name: Install CRDs
         if: ${{ inputs.install-crds }}
