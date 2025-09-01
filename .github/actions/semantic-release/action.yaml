@@ -54,7 +54,7 @@ runs:
           echo "No semantic release config found. Creating default config for Go Modules (i.e. only create git tags, no publishing to npm)..."
           
           # Create the default semantic release configuration
-          cat > .releaserc.json << 'EOF'
+          cat > .releaserc.json << -'EOF'
           {
               "branches": [
                 "main"
