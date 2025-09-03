@@ -48,10 +48,10 @@ jobs:
     name: Determine next version
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.semantic-release-dry-run.outputs.version }}
+      version: ${{ steps.semantic-release-dry-run.outputs.new-release-version }}
       new-release-published: ${{ steps.semantic-release-dry-run.outputs.new-release-published }}
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Clone the code
         uses: actions/checkout@v4

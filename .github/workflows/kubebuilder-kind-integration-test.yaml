@@ -20,7 +20,7 @@ on:
 jobs:
   kubebuilder-e2e:
     name: Run on Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: konfidence-large
     env:
       GOPRIVATE: github.com/konfidence-project
     steps:
