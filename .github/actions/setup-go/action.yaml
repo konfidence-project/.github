@@ -11,6 +11,8 @@ runs:
   steps:
     - name: Setup Go
       uses: actions/setup-go@v5
+      env:
+        GOPRIVATE: github.com/konfidence-project
       with:
         go-version-file: ${{ inputs.go-version-file }}
     
