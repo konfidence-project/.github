@@ -1,13 +1,13 @@
-name: "GitHub Repo Access"
-description: "Sets up GitHub CLI authentication for private repositories inside this org (konfidence-project)"
+name: GitHub Repo Access
+description: Sets up GitHub CLI authentication for private repositories inside this org (konfidence-project)
 
 inputs:
   private-key:
     required: true
-    description: "Private key for konfidence-project GitHub App"
+    description: Private key for konfidence-project GitHub App
 
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Generate GitHub App Token
       id: generate-token

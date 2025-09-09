@@ -4,27 +4,27 @@ on:
   workflow_call:
     inputs:
       image-name:
-        description: 'Container image name (without registry/tag)'
+        description: Container image name (without registry/tag)
         type: string
         default: ${{ github.repository }}
       registry:
-        description: 'Container registry URL'
+        description: Container registry URL
         required: false
         type: string
-        default: 'ghcr.io'
+        default: ghcr.io
       dockerfile:
-        description: 'Path to Dockerfile'
+        description: Path to Dockerfile
         required: false
         type: string
-        default: 'Dockerfile'
+        default: Dockerfile
       context:
-        description: 'Build context path'
+        description: Build context path
         required: false
         type: string
-        default: '.'
+        default: .
     secrets:
       konfidence-project-repo-access-private-key:
-        description: 'Private key for konfidence-project GitHub App'
+        description: Private key for konfidence-project GitHub App
         required: true
 
 env:
@@ -51,7 +51,7 @@ jobs:
         with:
           image-name: ${{ inputs.image-name }}
           registry: ${{ inputs.registry }}
-          version: 'latest'
+          version: latest
           push: false
           dockerfile: ${{ inputs.dockerfile }}
           context: ${{ inputs.context }}

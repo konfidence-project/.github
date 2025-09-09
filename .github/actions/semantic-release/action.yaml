@@ -1,22 +1,22 @@
-name: 'Semantic Release'
-description: 'Complete semantic release setup and execution with automatic config detection'
-author: 'konfidence-project'
+name: Semantic Release
+description: Complete semantic release setup and execution with automatic config detection
+author: konfidence-project
 
 inputs:
   dry-run:
-    description: 'Whether to run semantic release in dry-run mode'
+    description: Whether to run semantic release in dry-run mode
     required: false
-    default: 'false'
+    default: "false"
 outputs:
   new-release-published:
-    description: 'Whether a new release was published'
+    description: Whether a new release was published
     value: ${{ steps.release.outputs.new_release_published }}
   new-release-version:
-    description: 'Version of the new release'
+    description: Version of the new release
     value: ${{ steps.release.outputs.new_release_version }}
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Setup semantic release configuration
       id: setup

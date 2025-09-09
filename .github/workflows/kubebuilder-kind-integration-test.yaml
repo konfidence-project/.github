@@ -3,19 +3,19 @@ on:
   workflow_call:
     secrets:
       konfidence-project-repo-access-private-key:
-        description: 'Private key for konfidence-project GitHub App'
+        description: Private key for konfidence-project GitHub App
         required: true
     inputs:
         install-crds:
-            description: 'Whether to install CRDs'
+            description: Whether to install CRDs
             required: false
             type: boolean
             default: true
         crds-version:
-            description: 'Version of CRDs to install'
+            description: Version of CRDs to install
             required: false
             type: string
-            default: 'latest'
+            default: latest
 
 jobs:
   kubebuilder-e2e:
