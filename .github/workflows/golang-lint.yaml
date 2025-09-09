@@ -11,8 +11,6 @@ jobs:
   lint:
     name: Run on Ubuntu
     runs-on: ubuntu-latest
-    env:
-      GOPRIVATE: github.com/konfidence-project
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
