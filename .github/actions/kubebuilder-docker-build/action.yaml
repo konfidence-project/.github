@@ -65,15 +65,11 @@ runs:
 
     - name: Generate manifests and code
       shell: bash
-      env:
-        GOPRIVATE: github.com/konfidence-project
       run: |
         make manifests generate
 
     - name: Build manager binary
       shell: bash
-      env:
-        GOPRIVATE: github.com/konfidence-project
       run: |
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/manager cmd/main.go
 
