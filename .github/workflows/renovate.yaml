@@ -27,9 +27,9 @@ permissions:
 
 # Cache settings (artifact-based repository cache)
 env:
-  cache_archive: renovate_cache.tar.gz
-  cache_dir: /tmp/renovate/cache/renovate/repository
-  cache_key: renovate-cache
+  CACHE_ARCHIVE: renovate_cache.tar.gz
+  CACHE_DIR: /tmp/renovate/cache/renovate/repository
+  CACHE_KEY: renovate-cache
 
 jobs:
   renovate:
@@ -50,7 +50,7 @@ jobs:
         if: github.event.inputs.repoCache != 'disabled'
         continue-on-error: true
         with:
-          name: ${{ env.cache_key }}
+          name: ${{ env.CACHE_KEY }}
           path: cache-download
 
       - name: Extract renovate cache
@@ -60,8 +60,8 @@ jobs:
           # print commands (-x), and fail on pipe errors (-o pipefail)
           set -euxo pipefail
           if [ -d cache-download ]; then
-            mkdir -p "$cache_dir"
-            tar -xzf "cache-download/${{ env.cache_archive }}" -C "$cache_dir" || true
+            mkdir -p "$CACHE_DIR"
+            tar -xzf "cache-download/${{ env.CACHE_ARCHIVE }}" -C "$CACHE_DIR" || true
             # Renovate container runs as UID 12021; ensure ownership matches to avoid EACCES
             sudo chown -R 12021:0 /tmp/renovate
           else
@@ -95,14 +95,14 @@ jobs:
         if: always()
         run: |
           set -euxo pipefail
-          if [ -d "$cache_dir" ]; then
-            tar -czvf "${{ env.cache_archive }}" -C "$cache_dir" .
+          if [ -d "$CACHE_DIR" ]; then
+            tar -czvf "${{ env.CACHE_ARCHIVE }}" -C "$CACHE_DIR" .
           fi
 
       - name: Upload cache artifact
         if: always()
         uses: actions/upload-artifact@v4.6.2
         with:
-          name: ${{ env.cache_key }}
-          path: ${{ env.cache_archive }}
+          name: ${{ env.CACHE_KEY }}
+          path: ${{ env.CACHE_ARCHIVE }}
           retention-days: 1
