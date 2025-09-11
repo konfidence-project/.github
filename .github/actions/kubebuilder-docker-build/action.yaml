@@ -46,10 +46,6 @@ outputs:
 runs:
   using: composite
   steps:
-
-    - name: Setup Go
-      uses: konfidence-project/.github/.github/actions/setup-go@main
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
