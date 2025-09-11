@@ -1,32 +1,82 @@
-name: Kubebuilder Tests
-
+name: Kubebuilder E2E Tests
 on: 
   workflow_call:
     secrets:
       konfidence-project-repo-access-private-key:
         description: Private key for konfidence-project GitHub App
         required: true
+    inputs:
+        test-cmd:
+          description: Command to run to test the kubebuilder project
+          required: false
+          type: string
+          default: make test
+        with-kind-cluster:
+          description: Whether to create a Kind cluster to test against
+          required: false
+          type: boolean
+          default: true
+        install-crds:
+            description: Whether to install CRDs
+            required: false
+            type: boolean
+            default: true
+        crds-version:
+            description: Version of CRDs to install
+            required: false
+            type: string
+            default: latest
 
 jobs:
-
-  test:
+  kubebuilder-e2e:
     name: Run on Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: konfidence-large
     env:
       GOPRIVATE: github.com/konfidence-project
     steps:
-    - name: Clone the code
-      uses: actions/checkout@v4
+      - name: Clone the code
+        uses: actions/checkout@v4
 
-    - name: Setup GitHub Repo Access
-      uses: konfidence-project/.github/.github/actions/github-repo-access@main
-      with:
-        private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
+      - name: Setup GitHub Repo Access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+        with:
+          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
+         
+      - name: Setup Go
+        uses: konfidence-project/.github/.github/actions/setup-go@main
 
-    - name: Setup Go
-      uses: konfidence-project/.github/.github/actions/setup-go@main
+      - name: Check out CRDs Repo
+        uses: actions/checkout@v4
+        if: ${{ inputs.install-crds && inputs.with-kind-cluster }}
+        with:
+          repository: konfidence-project/crds
+          ref: ${{ inputs.crds-version }}
+          path: crds
+          token: ${{ env.GH_TOKEN }}
 
-    - name: Running Tests
-      run: |
-        go mod tidy
-        make test 
+      - name: Install the latest version of kind
+        if: ${{ inputs.with-kind-cluster }}
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      - name: Verify kind installation
+        if: ${{ inputs.with-kind-cluster }}
+        run: kind version
+      
+      - name: Create Kind Cluster
+        if: ${{ inputs.with-kind-cluster }}
+        run: |
+          kind create cluster --name kind-integration-test  
+          kubectl cluster-info --context kind-kind-integration-test
+
+      - name: Install CRDs
+        if: ${{ inputs.install-crds && inputs.with-kind-cluster }}
+        run: |
+          kubectl apply -f crds/config/crd/bases
+
+      - name: Running Kubebuilder E2E Tests
+        run: |
+          go mod tidy
+          ${{ inputs.test-cmd }} 
