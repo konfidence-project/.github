@@ -9,11 +9,12 @@ inputs:
 runs:
   using: composite 
   steps:
+    - name: Set GOPRIVATE
+      shell: bash
+      run: |
+        echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
     - name: Setup Go
       uses: actions/setup-go@v5
-      env:
-        GOPRIVATE: github.com/konfidence-project
       with:
         go-version-file: ${{ inputs.go-version-file }}
     
- 

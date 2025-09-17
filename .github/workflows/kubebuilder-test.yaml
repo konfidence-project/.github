@@ -1,4 +1,4 @@
-name: Kubebuilder E2E Tests
+name: Kubebuilder Tests
 on: 
   workflow_call:
     secrets:
@@ -10,7 +10,7 @@ on:
           description: Command to run to test the kubebuilder project
           required: false
           type: string
-          default: make test
+          default: test
         with-kind-cluster:
           description: Whether to create a Kind cluster to test against
           required: false
@@ -31,8 +31,6 @@ jobs:
   kubebuilder-e2e:
     name: Run on Ubuntu
     runs-on: konfidence-large
-    env:
-      GOPRIVATE: github.com/konfidence-project
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
@@ -52,6 +50,7 @@ jobs:
           repository: konfidence-project/crds
           ref: ${{ inputs.crds-version }}
           path: crds
+          sparse-checkout: config/crd/bases # only checkout the generated CRDs
           token: ${{ env.GH_TOKEN }}
 
       - name: Install the latest version of kind
@@ -76,7 +75,7 @@ jobs:
         run: |
           kubectl apply -f crds/config/crd/bases
 
-      - name: Running Kubebuilder E2E Tests
+      - name: Run Tests
         run: |
           go mod tidy
-          ${{ inputs.test-cmd }} 
+          make ${{ inputs.test-cmd }} 
