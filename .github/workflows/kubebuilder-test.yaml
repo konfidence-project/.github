@@ -1,10 +1,6 @@
 name: Kubebuilder Tests
 on: 
   workflow_call:
-    secrets:
-      konfidence-project-repo-access-private-key:
-        description: Private key for konfidence-project GitHub App
-        required: true
     inputs:
         test-cmd:
           description: Command to run to test the kubebuilder project

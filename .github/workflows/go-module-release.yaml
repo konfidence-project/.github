@@ -9,10 +9,6 @@ on:
       new-release-published:
         description: 'Whether a new release was published'
         value: ${{ jobs.release.outputs.new-release-published }}
-    secrets:
-      konfidence-project-repo-access-private-key:
-        description: 'Private key for konfidence-project GitHub App'
-        required: true
 
 jobs: 
   release:

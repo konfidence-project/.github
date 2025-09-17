@@ -40,10 +40,6 @@ on:
       version:
         description: Version that was created
         value: ${{ jobs.version.outputs.version }}
-    secrets:
-      konfidence-project-repo-access-private-key:
-        description: Private key for konfidence-project GitHub App
-        required: true
 
 env:
   REGISTRY: ${{ inputs.registry }}
