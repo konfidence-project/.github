@@ -100,7 +100,7 @@ jobs:
           image-name: ${{ inputs.image-name }}
           registry: ${{ inputs.registry }}
           version: ${{ needs.version.outputs.version }}
-          push: ${{ inputs.push && needs.version.outputs.new-release-published == 'true' }}
+          push: ${{ inputs.push && needs.version.outputs.new-release-published }}
           dockerfile: ${{ inputs.dockerfile }}
           context: ${{ inputs.context }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -108,7 +108,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     needs: [version, build]
-    if: ${{ needs.build.outputs.digest && needs.version.outputs.new-release-published == 'true' && inputs.release == 'true' }}
+    if: ${{ needs.build.outputs.digest && needs.version.outputs.new-release-published && inputs.release }}
     permissions:
       contents: write
       issues: write
