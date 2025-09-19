@@ -34,7 +34,7 @@ jobs:
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@main
         with:
-          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
+          private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
          
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@main
