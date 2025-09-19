@@ -50,7 +50,7 @@ jobs:
     name: Determine next version
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.semantic-release-dry-run.outputs.new-release-version }}
+      version: ${{ steps.determine-version.outputs.version }}
       new-release-published: ${{ steps.semantic-release-dry-run.outputs.new-release-published }}
     permissions:
       contents: write
@@ -70,6 +70,19 @@ jobs:
         uses: konfidence-project/.github/.github/actions/semantic-release@fix/ci-code-review-issues
         with:
           dry-run: true
+          
+      - name: Determine version
+        id: determine-version
+        shell: bash
+        run: |
+          if [ -n "${{ steps.semantic-release-dry-run.outputs.new-release-version }}" ]; then
+            echo "version=${{ steps.semantic-release-dry-run.outputs.new-release-version }}" >> $GITHUB_OUTPUT
+            echo "Using semantic-release version: ${{ steps.semantic-release-dry-run.outputs.new-release-version }}"
+          else
+            VERSION="${{github.head_ref}}-${{github.sha}}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "Using fallback git ref and sha version: ${VERSION}"
+          fi
   build:
     name: Build and Push Container Image
     runs-on: ubuntu-latest
