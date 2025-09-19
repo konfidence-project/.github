@@ -30,7 +30,8 @@ runs:
     - name: Copy semantic-release config
       shell: bash
       run: |
-        cp semantic-release/semantic-release/.releaserc.json .releaserc.json
+        tree
+        cp semantic-release/.releaserc.json .releaserc.json
 
     - name: Execute semantic release
       id: release
