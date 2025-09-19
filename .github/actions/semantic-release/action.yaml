@@ -23,6 +23,7 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: konfidence-project/.github
+        ref: fix/ci-code-review-issues
         path: semantic-release
         sparse-checkout: semantic-release/.releaserc.json
         token: ${{ env.GH_TOKEN }}
