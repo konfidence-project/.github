@@ -31,7 +31,7 @@ jobs:
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@fix/ci-code-review-issues
         with:
-          private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@fix/ci-code-review-issues

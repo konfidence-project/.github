@@ -1,6 +1,11 @@
 name: GitHub Repo Access
 description: Sets up GitHub CLI authentication for private repositories inside this org (konfidence-project)
 
+inputs:
+  private-key:
+    required: true
+    description: Private key for konfidence-project GitHub App
+
 runs:
   using: composite
   steps:
@@ -9,7 +14,7 @@ runs:
       uses: actions/create-github-app-token@v2
       with:
         app-id: 1702387
-        private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY  }}
+        private-key: ${{ inputs.private-key }}
         owner: ${{ github.repository_owner }}
 
     - name: Persist GitHub App Token for Job
