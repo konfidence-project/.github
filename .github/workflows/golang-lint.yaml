@@ -12,12 +12,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@main
-        with:
-          private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+        uses: konfidence-project/.github/.github/actions/github-repo-access@fix/ci-code-review-issues
 
       - name: Setup Go with private repos
-        uses: konfidence-project/.github/.github/actions/setup-go@main
+        uses: konfidence-project/.github/.github/actions/setup-go@fix/ci-code-review-issues
       
       - name: Run linter
         uses: golangci/golangci-lint-action@v8
