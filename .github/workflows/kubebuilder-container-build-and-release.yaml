@@ -79,9 +79,9 @@ jobs:
             echo "version=${{ steps.semantic-release-dry-run.outputs.new-release-version }}" >> $GITHUB_OUTPUT
             echo "Using semantic-release version: ${{ steps.semantic-release-dry-run.outputs.new-release-version }}"
           else
-            VERSION="${{github.head_ref}}-${{github.sha}}"
+            VERSION="${{github.sha}}"
             echo "version=${VERSION}" >> $GITHUB_OUTPUT
-            echo "Using fallback git ref and sha version: ${VERSION}"
+            echo "Using fallback git sha version: ${VERSION}"
           fi
   build:
     name: Build and Push Container Image
