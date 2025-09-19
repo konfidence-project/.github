@@ -70,8 +70,6 @@ jobs:
         uses: konfidence-project/.github/.github/actions/semantic-release@fix/ci-code-review-issues
         with:
           dry-run: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build:
     name: Build and Push Container Image
     runs-on: ubuntu-latest

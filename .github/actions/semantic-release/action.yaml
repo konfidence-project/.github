@@ -25,7 +25,7 @@ runs:
         repository: konfidence-project/.github
         path: semantic-release
         sparse-checkout: semantic-release/.releaserc.json
-        token: ${{ env.GITHUB_TOKEN }}
+        token: ${{ env.GH_TOKEN }}
 
     - name: Copy semantic-release config
       shell: bash
@@ -43,4 +43,4 @@ runs:
             @semantic-release/github 
             @semantic-release/git
       env:
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ env.GH_TOKEN }}
