@@ -2,28 +2,22 @@ name: Golang CI Lint
 
 on: 
   workflow_call:
-    secrets:
-      konfidence-project-repo-access-private-key:
-        description: 'Private key for konfidence-project GitHub App'
-        required: true
 
 jobs:
   lint:
     name: Run on Ubuntu
     runs-on: ubuntu-latest
-    env:
-      GOPRIVATE: github.com/konfidence-project
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+        uses: konfidence-project/.github/.github/actions/github-repo-access@fix/ci-code-review-issues
         with:
-          private-key: ${{ secrets.konfidence-project-repo-access-private-key }}
-
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          
       - name: Setup Go with private repos
-        uses: konfidence-project/.github/.github/actions/setup-go@main
+        uses: konfidence-project/.github/.github/actions/setup-go@fix/ci-code-review-issues
       
       - name: Run linter
         uses: golangci/golangci-lint-action@v8

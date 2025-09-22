@@ -1,55 +1,51 @@
-name: "Kubebuilder Docker Build"
-description: "Builds (and optionally pushes) a Kubebuilder container image"
+name: Kubebuilder Docker Build
+description: Builds (and optionally pushes) a Kubebuilder container image
 
 inputs:
   image-name:
-    description: 'Container image name (without registry/tag)'
+    description: Container image name (without registry/tag)
     required: true
   registry:
-    description: 'Container registry URL'
+    description: Container registry URL
     required: false
-    default: 'ghcr.io'
+    default: ghcr.io
   version:
-    description: 'Version tag for the image (optional, uses "latest" if not provided)'
+    description: Version tag for the image (optional, uses "latest" if not provided)
     required: false
-    default: 'latest'
+    default: latest
   push:
-    description: 'Whether to push the built image'
+    description: Whether to push the built image
     required: false
-    default: 'false'
+    default: "false"
   dockerfile:
-    description: 'Path to Dockerfile'
+    description: Path to Dockerfile
     required: false
-    default: 'Dockerfile'
+    default: Dockerfile
   context:
-    description: 'Build context path'
+    description: Build context path
     required: false
-    default: '.'
+    default: .
   github-token:
-    description: 'GitHub token for registry authentication'
+    description: GitHub token for registry authentication
     required: true
 
 outputs:
   image-digest:
-    description: 'SHA digest of the built image'
+    description: SHA digest of the built image
     value: ${{ steps.build.outputs.digest }}
   image-id:
-    description: 'Image ID of the built image'
+    description: Image ID of the built image
     value: ${{ steps.build.outputs.imageid }}
   tags:
-    description: 'Tags of the built image'
+    description: Tags of the built image
     value: ${{ steps.build.outputs.tags }}
   metadata:
-    description: 'Build metadata'
+    description: Build metadata
     value: ${{ steps.build.outputs.metadata }}
 
 runs:
-  using: "composite"
+  using: composite
   steps:
-
-    - name: Setup Go
-      uses: konfidence-project/.github/.github/actions/setup-go@main
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
@@ -65,15 +61,11 @@ runs:
 
     - name: Generate manifests and code
       shell: bash
-      env:
-        GOPRIVATE: github.com/konfidence-project
       run: |
         make manifests generate
 
     - name: Build manager binary
       shell: bash
-      env:
-        GOPRIVATE: github.com/konfidence-project
       run: |
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/manager cmd/main.go
 

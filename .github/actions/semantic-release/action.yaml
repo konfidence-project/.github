@@ -1,64 +1,37 @@
-name: 'Semantic Release'
-description: 'Complete semantic release setup and execution with automatic config detection'
-author: 'konfidence-project'
+name: Semantic Release
+description: Complete semantic release setup and execution with automatic config detection
+author: konfidence-project
 
 inputs:
   dry-run:
-    description: 'Whether to run semantic release in dry-run mode'
+    description: Whether to run semantic release in dry-run mode
     required: false
-    default: 'false'
+    default: "false"
 outputs:
   new-release-published:
-    description: 'Whether a new release was published'
+    description: Whether a new release was published
     value: ${{ steps.release.outputs.new_release_published }}
   new-release-version:
-    description: 'Version of the new release'
+    description: Version of the new release
     value: ${{ steps.release.outputs.new_release_version }}
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
-    - name: Setup semantic release configuration
-      id: setup
+
+    - name: Clone semantic-release config
+      uses: actions/checkout@v4
+      with:
+        repository: konfidence-project/.github
+        ref: fix/ci-code-review-issues
+        path: semantic-release
+        sparse-checkout: semantic-release/.releaserc.json
+        token: ${{ env.GH_TOKEN }}
+
+    - name: Copy semantic-release config
       shell: bash
-      working-directory: ${{ inputs.working-directory }}
       run: |
-        # List of common semantic release config files
-        config_files=(
-          ".releaserc.json"
-          ".releaserc.yml" 
-          ".releaserc.yaml"
-          ".releaserc"
-          "release.config.js"
-          "release.config.mjs"
-          "release.config.cjs"
-          "release.config.ts"
-        )
-        
-        config_found=false
-        config_file=""
-        
-        # Check if any config file exists
-        for file in "${config_files[@]}"; do
-          if [ -f "$file" ]; then
-            echo "Semantic release config found: $file"
-            cat "$file"
-            config_found=true
-            config_file="$file"
-            break
-          fi
-        done
-        
-        # If no config file found, create the default config inline
-        if [ "$config_found" = false ]; then
-          echo "No semantic release config found. Please create a semantic release config file!"
-          
-          exit 1
-        fi
-        
-        # Set outputs
-        echo "config-found=$config_found" >> $GITHUB_OUTPUT
-        echo "config-file=$config_file" >> $GITHUB_OUTPUT
+        cp semantic-release/semantic-release/.releaserc.json .releaserc.json
 
     - name: Execute semantic release
       id: release
@@ -71,4 +44,4 @@ runs:
             @semantic-release/github 
             @semantic-release/git
       env:
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ env.GH_TOKEN }}

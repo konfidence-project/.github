@@ -1,0 +1,43 @@
+on: 
+  push: 
+    branches: ["main"]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+            
+      - name: release new version
+        id: semantic-release
+        uses: konfidence-project/.github/.github/actions/semantic-release@fix/ci-code-review-issues
+            
+      - name: update major version tag
+        if: steps.semantic-release.outputs.new-release-published == 'true'
+        run: |
+          # Extract major version from the new release version
+          NEW_VERSION="${{ steps.semantic-release.outputs.new-release-version }}"
+          MAJOR_VERSION=$(echo "$NEW_VERSION" | cut -d. -f1)
+            
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+            
+          # Force update the major version tag
+          git tag -f "v$MAJOR_VERSION"
+          git push origin "v$MAJOR_VERSION" --force
+            
+          echo "Updated major version tag v$MAJOR_VERSION to point to version $NEW_VERSION"
+            
