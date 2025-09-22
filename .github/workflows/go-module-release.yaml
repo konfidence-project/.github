@@ -29,15 +29,15 @@ jobs:
           fetch-depth: 0
           
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       - name: Setup Go
-        uses: konfidence-project/.github/.github/actions/setup-go@main
+        uses: konfidence-project/.github/.github/actions/setup-go@v1
 
       - name: Semantic Release
         id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@main
+        uses: konfidence-project/.github/.github/actions/semantic-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
