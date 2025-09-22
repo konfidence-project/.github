@@ -43,5 +43,6 @@ runs:
             @semantic-release/release-notes-generator 
             @semantic-release/github 
             @semantic-release/git
+            conventional-changelog-conventionalcommits
       env:
         GITHUB_TOKEN: ${{ env.GH_TOKEN }}
