@@ -21,7 +21,7 @@ on:
             description: Version of CRDs to install
             required: false
             type: string
-            default: latest
+            default: main
 
 jobs:
   kubebuilder-e2e:
