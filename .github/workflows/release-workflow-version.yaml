@@ -22,7 +22,7 @@ jobs:
             
       - name: release new version
         id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/semantic-release@main
             
       - name: update major version tag
         if: steps.semantic-release.outputs.new-release-published == 'true'

@@ -61,13 +61,13 @@ jobs:
           fetch-depth: 0
           
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/github-repo-access@main
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
           
       - name: Semantic Release (dry-run)
         id: semantic-release-dry-run
-        uses: konfidence-project/.github/.github/actions/semantic-release@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/semantic-release@main
         with:
           dry-run: true
           
@@ -103,11 +103,11 @@ jobs:
           fetch-depth: 0
       
       - name: Setup Go
-        uses: konfidence-project/.github/.github/actions/setup-go@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/setup-go@main
     
       - name: Build and Push Docker Image
         id: docker-build
-        uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@main
         with:
           image-name: ${{ inputs.image-name }}
           registry: ${{ inputs.registry }}
@@ -133,10 +133,10 @@ jobs:
           fetch-depth: 0
           
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/github-repo-access@main
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
           
       - name: Semantic Release (create release)
         id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@fix/ci-code-review-issues
+        uses: konfidence-project/.github/.github/actions/semantic-release@main
