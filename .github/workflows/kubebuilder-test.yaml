@@ -22,9 +22,17 @@ on:
             required: false
             type: string
             default: main
+        before-tests:
+            description: Command to run before tests (e.g., setup commands like make commands)
+            required: false
+            type: string
+        after-tests:
+            description: Command to run after tests (e.g., cleanup commands)
+            required: false
+            type: string
 
 jobs:
-  kubebuilder-e2e:
+  kubebuilder-test:
     name: Run on Ubuntu
     runs-on: konfidence-large
     steps:
@@ -71,7 +79,15 @@ jobs:
         run: |
           kubectl apply -f crds/config/crd/bases
 
+      - name: Before Tests Setup
+        if: ${{ inputs.before-tests }}
+        run: ${{ inputs.before-tests }}
+
       - name: Run Tests
         run: |
           go mod tidy
-          make ${{ inputs.test-cmd }} 
+          make ${{ inputs.test-cmd }}
+
+      - name: After Tests Cleanup
+        if: ${{ inputs.after-tests }}
+        run: ${{ inputs.after-tests }}
