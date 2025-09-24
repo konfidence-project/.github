@@ -26,11 +26,11 @@ jobs:
 
 ### 2. Kubebuilder Test ([`kubebuilder-test.yaml`](./.github/workflows/kubebuilder-test.yaml))
 
-Comprehensive testing workflow for Kubebuilder projects with optional Kind cluster setup and CRD installation.
+Comprehensive testing workflow for Kubebuilder projects with optional Kind cluster setup, CRD installation, and lifecycle hooks for setup and cleanup commands.
 
 > **⚠️ Installation of CRDs ⚠️** 
 > 
-> With the [current CRDs Repo Setup](https://github.com/konfidence-project/crds), the test job will checkout the [config/crd](https://github.com/konfidence-project/crds/tree/main/config/crd) path and apply them to the kind cluster. Per default, it will use the main branch as ref. When implementing this workflow, make sure that the actual commit or version ref of the repo is used. This setup will probably change in the near future.
+> With the [current CRDs Repo Setup](https://github.com/konfidence-project/crds), the test job will checkout the [config/crd](https://github.com/konfidence-project/crds/tree/main/config/crd) path and apply them to the kind cluster. Per default, it will use the main branch as ref. When implementing this workflow, make sure that the actual commit or version ref of the repo is used. If the repo supports generating the CRDs with a make command, use the `before-tests` input to generate them instead and make sure that the `install-crds` input is set to `false`.
 
 **Usage:**
 ```yaml
@@ -43,7 +43,59 @@ jobs:
       install-crds: true         # Optional: Install CRDs (default: true)
       crds-version: "main"       # Optional: CRD version ref (default: main) 
       test-cmd: "test"           # Optional: Make target to run (default: "test" will execute `make test`)
+      before-tests: "make setup"  # Optional: Command to run before tests (e.g., setup commands)
+      after-tests: "make cleanup" # Optional: Command to run after tests (e.g., cleanup commands)
 ```
+
+#### Example Usages:
+
+**Unit Tests**
+
+Following example runs `make test` to run simple go tests, without starting a kind cluster or installing CRDs
+
+```yaml
+jobs:
+  test-unit:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
+    secrets: inherit
+    with:
+      with-kind-cluster: false    
+      install-crds: false       
+      test-cmd: "test"         
+```
+
+**Unit Tests and custom CRD generations**
+
+Following example also runs `make test` without a kind cluster, but will run `make generate-test-crds` before executing the tests.
+
+```yaml
+jobs:
+  test-unit:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
+    secrets: inherit
+    with:
+      with-kind-cluster: false    
+      install-crds: false       
+      test-cmd: "test"    
+      before-tests: `make generate-test-crds`     
+```
+
+**Integration Tests with Kind Cluster**
+
+This example will run the `make test-e2e` command with an existing kind cluster and install the CRDs from commit e029cc3. 
+
+```yaml
+jobs:
+  test-unit:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
+    secrets: inherit
+    with:
+      with-kind-cluster: true    
+      install-crds: true       
+      crds-version: "e029cc3"
+      test-cmd: `test-e2e`
+```
+
 
 ### 3. Kubebuilder Container Build and Release ([`kubebuilder-container-build-and-release.yaml`](.github/workflows/kubebuilder-container-build-and-release.yaml))
 
@@ -128,7 +180,7 @@ jobs:
     with:
       with-kind-cluster: true
       install-crds: true
-      crds-version: v0.0.1 # Change this depending on your current setup. Will probably get changed soon.
+      crds-version: v0.0.1 
 
   build-and-release:
     name: Build Container Image
@@ -173,7 +225,6 @@ jobs:
       with-kind-cluster: true
       install-crds: true
       crds-version: 6f560b268fa798ee96457551578fe84e90ae2acf
-
   build-and-release:
     needs:
       - lint
