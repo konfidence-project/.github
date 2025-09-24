@@ -80,8 +80,8 @@ jobs:
           kubectl apply -f crds/config/crd/bases
 
       - name: Before Tests Setup
-        if: ${{ inputs.beforeTests }}
-        run: ${{ inputs.beforeTests }}
+        if: ${{ inputs.before-tests }}
+        run: ${{ inputs.before-tests }}
 
       - name: Run Tests
         run: |
@@ -89,5 +89,5 @@ jobs:
           make ${{ inputs.test-cmd }}
 
       - name: After Tests Cleanup
-        if: ${{ inputs.afterTests }}
-        run: ${{ inputs.afterTests }}
+        if: ${{ inputs.after-tests }}
+        run: ${{ inputs.after-tests }}
