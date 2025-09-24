@@ -260,6 +260,8 @@ uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
 
 > The release of the shared GitHub Workflows is configured within the [`release-workflow-version`](.github/workflows/release-workflow-version.yaml) workflow.
 
+> When fetching new changes with git using `git fetch` you may encounter following error: `! [rejected]        v1         -> v1  (would clobber existing tag)`. You can run  `git fetch -Pf` to force update the tag.
+
 ## Semantic Release Configuration
 
 This repository uses [semantic-release](https://semantic-release.gitbook.io/) with conventional commits:
