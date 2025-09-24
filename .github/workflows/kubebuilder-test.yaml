@@ -32,7 +32,7 @@ on:
             type: string
 
 jobs:
-  kubebuilder-e2e:
+  kubebuilder-test:
     name: Run on Ubuntu
     runs-on: konfidence-large
     steps:
