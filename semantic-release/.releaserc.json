@@ -6,15 +6,11 @@
     [
       "@semantic-release/commit-analyzer",
       {
-        "preset": "angular",
+        "preset": "conventionalcommits",
         "releaseRules": [
           {
             "breaking": true,
             "release": "major"
-          },
-          {
-            "type": "build",
-            "release": "patch"
           },
           {
             "type": "feat",
@@ -30,25 +26,21 @@
           },
           {
             "type": "chore",
+            "scope": "deps",
             "release": "patch"
           },
           {
-            "type": "ci",
-            "release": "patch"
-          },
-          {
-            "type": "docs",
-            "release": "patch"
-          },
-          {
-            "type": "style",
-            "release": "patch"
-          },
-          {
-            "type": "refactor",
+            "type": "chore",
+            "scope": "security",
             "release": "patch"
           }
-        ]
+        ],
+        "parserOpts": {
+          "noteKeywords": [
+            "BREAKING CHANGE",
+            "BREAKING CHANGES"
+          ]
+        }
       }
     ],
     [
@@ -57,10 +49,6 @@
         "preset": "conventionalcommits",
         "presetConfig": {
           "types": [
-            {
-              "type": "build",
-              "section": "Build"
-            },
             {
               "type": "feat",
               "section": "Features"
@@ -75,23 +63,32 @@
             },
             {
               "type": "chore",
-              "section": "Other"
-            },
-            {
-              "type": "ci",
-              "section": "Build"
+              "section": "Maintenance"
             },
             {
               "type": "docs",
-              "section": "Documentation"
+              "section": "Documentation",
+              "hidden": true
             },
             {
               "type": "style",
-              "section": "Features"
+              "section": "Code Style",
+              "hidden": true
             },
             {
               "type": "refactor",
-              "section": "Refactorings"
+              "section": "Code Refactoring",
+              "hidden": true
+            },
+            {
+              "type": "build",
+              "section": "Build System",
+              "hidden": true
+            },
+            {
+              "type": "ci",
+              "section": "CI/CD",
+              "hidden": true
             }
           ]
         }
