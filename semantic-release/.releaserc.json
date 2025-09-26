@@ -21,6 +21,10 @@
             "release": "patch"
           },
           {
+            "revert": true,
+            "release": "patch"
+          },
+          {
             "type": "perf",
             "release": "patch"
           },
