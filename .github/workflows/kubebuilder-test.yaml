@@ -37,7 +37,7 @@ jobs:
     runs-on: konfidence-large
     steps:
       - name: Clone the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v1
@@ -48,7 +48,7 @@ jobs:
         uses: konfidence-project/.github/.github/actions/setup-go@v1
 
       - name: Check out CRDs Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         if: ${{ inputs.install-crds && inputs.with-kind-cluster }}
         with:
           repository: konfidence-project/crds
