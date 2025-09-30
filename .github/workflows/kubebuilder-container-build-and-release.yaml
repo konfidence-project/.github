@@ -33,6 +33,12 @@ on:
         required: false
         type: string
         default: '.'
+
+      release_manifests:
+        description: Whether to generate k8s deployment manifests as release assets
+        required: false
+        type: boolean
+        default: true
     outputs:
       image-digest:
         description: SHA digest of the built image
@@ -104,6 +110,9 @@ jobs:
       
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@v1
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
     
       - name: Build and Push Docker Image
         id: docker-build
@@ -116,6 +125,25 @@ jobs:
           dockerfile: ${{ inputs.dockerfile }}
           context: ${{ inputs.context }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate release artifacts
+        if: ${{ inputs.release && inputs.release_manifests }}
+        env:
+          IMAGE: ${{ inputs.registry }}/${{ inputs.image-name }}:${{ needs.version.outputs.version }}
+        run: |
+          mkdir -p config/release
+          ( cd config/manager && kustomize edit set image ${{ github.repository }}=${IMAGE} ) 
+          kustomize build config/manager > config/release/controller.deployment.yaml
+
+      - name: Upload release artifacts
+        if: ${{ inputs.release && inputs.release_manifests }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: controller.deployment.yaml
+          path: config/release/
+          if-no-files-found: error
+
+
   release:
     name: Create Release
     runs-on: ubuntu-latest
@@ -136,7 +164,14 @@ jobs:
         uses: konfidence-project/.github/.github/actions/github-repo-access@v1
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-          
+
+      - name: Download release artifacts
+        if: ${{ inputs.release && inputs.release_manifests }}
+        uses: actions/download-artifact@v4
+        with:
+          name: controller.deployment.yaml
+          path: dist
+
       - name: Semantic Release (create release)
         id: semantic-release
         uses: konfidence-project/.github/.github/actions/semantic-release@v1
