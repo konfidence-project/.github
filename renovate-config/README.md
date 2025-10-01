@@ -1,6 +1,6 @@
 # Renovate Configuration
 
-Renovate configuration presets for automated dependency management across Konfidence Project repositories.
+The repository includes Renovate configuration presets for dependency management:
 
 ## Using the Base Preset
 
@@ -17,25 +17,10 @@ Add to your repository's `renovate.json`:
 
 ## Features Included
 
-### Auto-merge
-- Patch updates and digests are automatically merged
-- Security updates are prioritized
-- Non-breaking updates are handled automatically
-
-### Semantic Commits
-- All updates use conventional commit format
-- Commit messages follow the pattern: `fix(deps): update dependency X to vY`
-- Enables proper semantic versioning in release workflows
-
-### Smart Grouping
-- Related updates are grouped together
-- Reduces PR noise
-- Logical grouping by package ecosystem
-
-### Security Focused
-- Vulnerability updates are prioritized
-- Security patches are fast-tracked
-- Critical updates get immediate attention
+- **Auto-merge**: Patch updates and digests are automatically merged
+- **Semantic commits**: All updates use conventional commit format
+- **Smart grouping**: Related updates are grouped together
+- **Security focused**: Vulnerability updates are prioritized
 
 ## Preset Structure
 

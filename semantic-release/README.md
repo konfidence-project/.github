@@ -4,18 +4,22 @@ This repository uses [semantic-release](https://semantic-release.gitbook.io/) wi
 
 ## Commit Types and Release Impact
 
-| Commit Type | Release Type | Example |
-|-------------|--------------|---------|
-| `feat:` | Minor | `feat: add new workflow parameter` |
-| `fix:` | Patch | `fix: resolve authentication issue` |
-| `perf:` | Patch | `perf: optimize build performance` |
-| `build:` | Patch | `build: update dependencies` |
-| `ci:` | Patch | `ci: improve workflow reliability` |
-| `docs:` | Patch | `docs: update README` |
-| `style:` | Patch | `style: format YAML files` |
-| `refactor:` | Patch | `refactor: restructure action` |
-| `chore:` | Patch | `chore: update config` |
-| `BREAKING CHANGE:` | Major | Any commit with breaking change footer |
+| Commit Type | Release Type | Visible in Release Notes | Example |
+|-------------|--------------|-------------------------|---------|
+| `feat:` | Minor | ✅ Yes (Features) | `feat: add new workflow parameter` |
+| `fix:` | Patch | ✅ Yes (Bug Fixes) | `fix: resolve authentication issue` |
+| `perf:` | Patch | ✅ Yes (Performance Improvements) | `perf: optimize build performance` |
+| `chore(deps):` | Patch | ✅ Yes (Maintenance) | `chore(deps): update dependencies` |
+| `chore(security):` | Patch | ✅ Yes (Maintenance) | `chore(security): patch vulnerability` |
+| `chore:` | No release | ✅ Yes (Maintenance) | `chore: update config` |
+| `docs:` | No release | ❌ No (hidden) | `docs: update README` |
+| `style:` | No release | ❌ No (hidden) | `style: format YAML files` |
+| `refactor:` | No release | ❌ No (hidden) | `refactor: restructure action` |
+| `build:` | No release | ❌ No (hidden) | `build: update build config` |
+| `ci:` | No release | ❌ No (hidden) | `ci: improve workflow reliability` |
+| `BREAKING CHANGE:` | Major | ✅ Yes | Any commit with breaking change footer |
+
+> **Note**: Only `chore` commits with scope `deps` or `security` trigger a patch release. Other `chore` commits without these scopes will not trigger a release but will appear in the release notes if included in a release.
 
 ## How It Works
 
