@@ -20,7 +20,7 @@ runs:
   steps:
 
     - name: Clone semantic-release config
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: konfidence-project/.github
         ref: main

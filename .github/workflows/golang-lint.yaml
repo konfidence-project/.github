@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v1
