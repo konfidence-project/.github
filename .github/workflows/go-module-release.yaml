@@ -24,7 +24,7 @@ jobs:
       new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
     steps:
       - name: Clone the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           
