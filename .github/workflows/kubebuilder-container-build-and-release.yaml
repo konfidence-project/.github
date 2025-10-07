@@ -167,7 +167,7 @@ jobs:
 
       - name: Download release artifacts
         if: ${{ inputs.release && inputs.release_manifests }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: controller.deployment.yaml
           path: dist
