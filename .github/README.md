@@ -1,6 +1,6 @@
 # GitHub Actions Workflows and Actions for Konfidence Project
 
-This repository contains shared files and configurations for the Konfidence Project GitHub organization, including:
+This .github directory inside the .github repository contains shared files and configurations for the Konfidence Project GitHub organization, including:
 
 - **GitHub Workflows**: Reusable CI/CD workflows for Go projects and Kubebuilder operators
 - **GitHub Actions**: Composite actions for common tasks like authentication and building

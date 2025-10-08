@@ -1,6 +1,6 @@
 # Semantic Release Configuration
 
-This repository uses [semantic-release](https://semantic-release.gitbook.io/) with conventional commits for automated versioning and release management.
+This configuration uses [semantic-release](https://semantic-release.gitbook.io/) with conventional commits for automated versioning and release management.
 
 ## Commit Types and Release Impact
 
@@ -30,7 +30,7 @@ This repository uses [semantic-release](https://semantic-release.gitbook.io/) wi
 
 ## Configuration Files
 
-The semantic-release configuration is located in this directory and includes:
+The semantic-release configuration includes:
 - Default release configuration
 - Custom plugins setup
 - Changelog generation rules

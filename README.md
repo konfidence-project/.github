@@ -1,8 +1,8 @@
 # Konfidence Project - Shared GitHub Organization Files
 
-This repository contains shared files and configurations for the Konfidence Project GitHub organization.
+This documentation covers shared files and configurations for the Konfidence Project GitHub organization.
 
-## 📁 Repository Structure
+## Available Components
 
 ### [GitHub Workflows](.github/workflows/)
 Reusable CI/CD workflows for Go projects and Kubebuilder operators. Includes workflows for linting, testing, building, and releasing.
@@ -12,7 +12,6 @@ Reusable CI/CD workflows for Go projects and Kubebuilder operators. Includes wor
 - **Container Build & Release** - Multi-arch container builds with semantic versioning
 - **Go Module Release** - Automated releases for Go modules
 
-[→ Learn more about workflows](.github/workflows/README.md)
 
 ### [GitHub Actions](.github/actions/)
 Composite actions for common tasks that can be used within workflows:
@@ -22,17 +21,17 @@ Composite actions for common tasks that can be used within workflows:
 - **Kubebuilder Docker Build** - Container image building and manifest generation
 - **Semantic Release** - Automated versioning and release creation
 
-[→ Learn more about actions](.github/actions/README.md)
+[→ Detailed workflows and actions documentation](.github/README.md)
 
 ### [Semantic Release Configuration](./semantic-release/)
 Standardized release automation using conventional commits. Automatically determines version numbers, creates releases, and manages tags.
 
-[→ Learn more about semantic release](./semantic-release/README.md)
+[→ Semantic release documentation](./semantic-release/README.md)
 
 ### [Renovate Configuration](./renovate-config/)
 Dependency management presets for automated updates. Features auto-merge for patches, smart grouping, and security-focused updates.
 
-[→ Learn more about Renovate config](./renovate-config/README.md)
+[→ Renovate configuration documentation](./renovate-config/README.md)
 
 ### [Organization Templates](./profile/)
 Default community health files and templates for the organization.
@@ -41,7 +40,7 @@ Default community health files and templates for the organization.
 
 ### Using Reusable Workflows
 
-Add to your workflow file:
+To use in your project, add to your workflow file:
 
 ```yaml
 jobs:
@@ -64,16 +63,15 @@ Add to your `renovate.json`:
 
 ## 📋 Requirements
 
-- All workflows require `secrets: inherit` for organization secret access
+- These workflows require `secrets: inherit` for organization secret access
 - The `KONFIDENCE_GITHUB_TOKEN` organization secret must be configured
 - Use versioned references (e.g., `@v1`) for stability
 
-## 📖 Documentation
+## 📖 Additional Resources
 
-For detailed documentation on each component, please refer to the README files in the respective directories:
+For detailed documentation on each component, please refer to the documentation in the respective directories:
 
-- [Workflows Documentation](.github/workflows/README.md)
-- [Actions Documentation](.github/actions/README.md)
+- [Workflows/ Actions Documentation](.github/README.md)
 - [Semantic Release Documentation](./semantic-release/README.md)
 - [Renovate Configuration Documentation](./renovate-config/README.md)
 

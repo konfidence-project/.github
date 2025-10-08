@@ -1,10 +1,10 @@
 # Renovate Configuration
 
-The repository includes Renovate configuration presets for dependency management:
+This includes Renovate configuration presets for dependency management:
 
 ## Using the Base Preset
 
-Add to your repository's `renovate.json`:
+Add to your project's `renovate.json`:
 
 ```json
 {
@@ -31,7 +31,7 @@ The configuration is organized into presets for different purposes:
 
 ## Customization
 
-You can extend or override the base preset in your repository:
+You can extend or override the base preset in your project:
 
 ```json
 {
