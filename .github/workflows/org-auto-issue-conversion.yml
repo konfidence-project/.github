@@ -42,6 +42,7 @@ jobs:
       - name: Set Issue Type from Label
         env:
           GITHUB_TOKEN: ${{ secrets.KONFIDENCE_PROJECT_ORG_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.KONFIDENCE_PROJECT_ORG_TOKEN || secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPO_NAME: ${{ github.repository }}
           ORG_NAME: ${{ github.repository_owner }}
@@ -199,6 +200,8 @@ jobs:
       - name: Handle Errors
         if: failure()
         env:
+          GITHUB_TOKEN: ${{ secrets.KONFIDENCE_PROJECT_ORG_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.KONFIDENCE_PROJECT_ORG_TOKEN || secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPO_NAME: ${{ github.repository }}
         run: |
