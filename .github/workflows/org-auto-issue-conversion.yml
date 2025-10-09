@@ -2,6 +2,20 @@
 # Customized for konfidence-project label schema:
 # - issue-type/* labels are mapped to GitHub Issue Types
 # - process/needs-conversion label is automatically removed after type assignment
+#
+# REQUIRED SETUP:
+# 1. Organization Issue Types must be enabled in GitHub organization settings
+# 2. Create an KONFIDENCE_PROJECT_ORG_TOKEN secret with one of the following:
+#    a) GitHub App token with "Issue Types" organization permission (read access)
+#    b) Personal Access Token (classic) with "admin:org" scope
+#    c) Fine-grained PAT with "Administration" organization permission (read access)
+# 3. Ensure the following Issue Types exist in the organization:
+#    - Bug, Epic, User Story, Task (or update LABEL_TO_TYPE_MAP below)
+#
+# TROUBLESHOOTING:
+# - "Resource not accessible by integration" error = missing Issue Types permission
+# - Check workflow run logs for detailed error messages and setup instructions
+# - Verify KONFIDENCE_PROJECT_ORG_TOKEN has the required permissions in organization settings
 
 name: Auto-assign Issue Type from Labels
 
@@ -13,6 +27,7 @@ on:
 permissions:
   issues: write
   contents: read
+  organization-administration: read
 
 jobs:
   set-issue-type:
@@ -26,7 +41,7 @@ jobs:
       # Step 2: Set issue type based on labels
       - name: Set Issue Type from Label
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.KONFIDENCE_PROJECT_ORG_TOKEN || secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPO_NAME: ${{ github.repository }}
           ORG_NAME: ${{ github.repository_owner }}
@@ -92,7 +107,10 @@ jobs:
           
           # Step 4: Get the Issue Type ID from the organization
           echo "🔍 Fetching issue type '${TARGET_TYPE}' from organization..."
-          ISSUE_TYPE_ID=$(gh api graphql \
+          echo "🔐 Using token: $(if [[ -n "${{ secrets.KONFIDENCE_PROJECT_ORG_TOKEN }}" ]]; then echo "KONFIDENCE_PROJECT_ORG_TOKEN"; else echo "GITHUB_TOKEN"; fi)"
+          
+          # First, test if we can access organization issue types
+          ISSUE_TYPES_RESPONSE=$(gh api graphql \
             -H "GraphQL-Features: issue_types" \
             -f query='
             query($org: String!) {
@@ -105,26 +123,34 @@ jobs:
                 }
               }
             }
-          ' -f org="${ORG_NAME}" \
-          --jq ".data.organization.issueTypes.nodes[] | select(.name == \"${TARGET_TYPE}\") | .id")
+          ' -f org="${ORG_NAME}" 2>&1) || {
+            echo "❌ Failed to access organization Issue Types. Error response:"
+            echo "${ISSUE_TYPES_RESPONSE}"
+            echo ""
+            echo "🔧 This error typically indicates one of the following:"
+            echo "   1. The token lacks 'Issue Types' organization permission"
+            echo "   2. Organization Issue Types are not enabled"
+            echo "   3. The token is not a GitHub App token with proper scopes"
+            echo ""
+            echo "💡 Required setup:"
+            echo "   - KONFIDENCE_PROJECT_ORG_TOKEN secret must be a GitHub App token or PAT"
+            echo "   - Token must have 'Issue Types' read permission at organization level"
+            echo "   - Organization must have Issue Types feature enabled"
+            exit 1
+          }
+          
+          # Extract the specific issue type ID
+          ISSUE_TYPE_ID=$(echo "${ISSUE_TYPES_RESPONSE}" | jq -r ".data.organization.issueTypes.nodes[] | select(.name == \"${TARGET_TYPE}\") | .id")
           
           # Check if issue type was found
-          if [[ -z "$ISSUE_TYPE_ID" ]]; then
+          if [[ -z "$ISSUE_TYPE_ID" ]] || [[ "$ISSUE_TYPE_ID" == "null" ]]; then
             echo "⚠️  Warning: Issue type '${TARGET_TYPE}' not found in organization."
             echo "Available issue types:"
-            gh api graphql \
-              -H "GraphQL-Features: issue_types" \
-              -f query='
-              query($org: String!) {
-                organization(login: $org) {
-                  issueTypes(first: 25) {
-                    nodes {
-                      name
-                    }
-                  }
-                }
-              }
-            ' -f org="${ORG_NAME}" --jq '.data.organization.issueTypes.nodes[].name'
+            echo "${ISSUE_TYPES_RESPONSE}" | jq -r '.data.organization.issueTypes.nodes[].name' | sed 's/^/  - /'
+            echo ""
+            echo "💡 To fix this:"
+            echo "   1. Create the '${TARGET_TYPE}' issue type in organization settings"
+            echo "   2. Or update the LABEL_TO_TYPE_MAP to use an existing type"
             exit 1
           fi
           
