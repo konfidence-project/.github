@@ -1,0 +1,182 @@
+# Workflow to automatically set issue types based on labels
+# Customized for konfidence-project label schema:
+# - issue-type/* labels are mapped to GitHub Issue Types
+# - process/needs-conversion label is automatically removed after type assignment
+
+name: Auto-assign Issue Type from Labels
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled]
+
+# Required permissions for the workflow
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  set-issue-type:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout repository to access any configuration files if needed
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set issue type based on labels
+      - name: Set Issue Type from Label
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO_NAME: ${{ github.repository }}
+          ORG_NAME: ${{ github.repository_owner }}
+        run: |
+          # Enable error handling
+          set -e
+          
+          echo "🔍 Processing issue #${ISSUE_NUMBER} in ${REPO_NAME}"
+          
+          # Get current issue labels
+          LABELS=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${REPO_NAME}/issues/${ISSUE_NUMBER}" \
+            --jq '.labels[].name' | tr '\n' ',' | sed 's/,$//')
+          
+          echo "Current labels: ${LABELS}"
+          
+          # Define label to issue type mapping
+          # Labels follow the pattern: issue-type/{type}
+          # Map the {type} part to the actual GitHub Issue Type name
+          declare -A LABEL_TO_TYPE_MAP=(
+            ["issue-type/bug"]="Bug"
+            ["issue-type/epic"]="Epic"
+            ["issue-type/user-story"]="User Story"
+            ["issue-type/task"]="Task"
+          )
+          
+          # Initialize variable to store the target issue type and matched label
+          TARGET_TYPE=""
+          MATCHED_LABEL=""
+          
+          # Check which label matches and set the target type
+          # Priority: first matching label wins
+          for label in ${LABELS//,/ }; do
+            if [[ -n "${LABEL_TO_TYPE_MAP[$label]}" ]]; then
+              TARGET_TYPE="${LABEL_TO_TYPE_MAP[$label]}"
+              MATCHED_LABEL="${label}"
+              echo "✅ Found matching label '$label' -> Issue Type '$TARGET_TYPE'"
+              break
+            fi
+          done
+          
+          # If no matching label found, exit gracefully
+          if [[ -z "$TARGET_TYPE" ]]; then
+            echo "ℹ️  No matching 'issue-type/*' label found. Skipping."
+            exit 0
+          fi
+          
+          # Step 3: Get the Issue's GraphQL ID
+          echo "📡 Fetching GraphQL ID for issue #${ISSUE_NUMBER}..."
+          ISSUE_ID=$(gh api graphql -f query='
+            query($owner: String!, $repo: String!, $number: Int!) {
+              repository(owner: $owner, name: $repo) {
+                issue(number: $number) {
+                  id
+                }
+              }
+            }
+          ' -f owner="${ORG_NAME}" -f repo="${REPO_NAME##*/}" -F number="${ISSUE_NUMBER}" --jq '.data.repository.issue.id')
+          
+          echo "Issue GraphQL ID: ${ISSUE_ID}"
+          
+          # Step 4: Get the Issue Type ID from the organization
+          echo "🔍 Fetching issue type '${TARGET_TYPE}' from organization..."
+          ISSUE_TYPE_ID=$(gh api graphql \
+            -H "GraphQL-Features: issue_types" \
+            -f query='
+            query($org: String!, $typeName: String!) {
+              organization(login: $org) {
+                issueTypes(first: 25) {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          ' -f org="${ORG_NAME}" -f typeName="${TARGET_TYPE}" \
+          --jq ".data.organization.issueTypes.nodes[] | select(.name == \"${TARGET_TYPE}\") | .id")
+          
+          # Check if issue type was found
+          if [[ -z "$ISSUE_TYPE_ID" ]]; then
+            echo "⚠️  Warning: Issue type '${TARGET_TYPE}' not found in organization."
+            echo "Available issue types:"
+            gh api graphql \
+              -H "GraphQL-Features: issue_types" \
+              -f query='
+              query($org: String!) {
+                organization(login: $org) {
+                  issueTypes(first: 25) {
+                    nodes {
+                      name
+                    }
+                  }
+                }
+              }
+            ' -f org="${ORG_NAME}" --jq '.data.organization.issueTypes.nodes[].name'
+            exit 1
+          fi
+          
+          echo "Issue Type ID: ${ISSUE_TYPE_ID}"
+          
+          # Step 5: Set the issue type using GraphQL mutation
+          echo "🚀 Setting issue type for issue #${ISSUE_NUMBER}..."
+          gh api graphql \
+            -H "GraphQL-Features: issue_types" \
+            -f query='
+            mutation($issueId: ID!, $issueTypeId: ID!) {
+              updateIssue(input: {
+                id: $issueId
+                issueTypeId: $issueTypeId
+              }) {
+                issue {
+                  id
+                  number
+                  title
+                  issueType {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          ' -f issueId="${ISSUE_ID}" -f issueTypeId="${ISSUE_TYPE_ID}"
+          
+          echo "✅ Successfully set issue type '${TARGET_TYPE}' for issue #${ISSUE_NUMBER}"
+          
+          # Step 6: Remove the process/needs-conversion label
+          echo "🏷️  Removing 'process/needs-conversion' label..."
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            --method DELETE \
+            "/repos/${REPO_NAME}/issues/${ISSUE_NUMBER}/labels/process%2Fneeds-conversion" \
+            2>/dev/null || echo "ℹ️  Label 'process/needs-conversion' not found or already removed"
+          
+          # Step 7: Add a comment to the issue
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${REPO_NAME}" \
+            --body "🤖 Automatically set issue type to **${TARGET_TYPE}** based on label **\`${MATCHED_LABEL}\`** and removed **\`process/needs-conversion\`** label."
+
+      # Step 8: Handle errors gracefully
+      - name: Handle Errors
+        if: failure()
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          echo "❌ Failed to set issue type. Please check the workflow logs."
+          gh issue comment "${ISSUE_NUMBER}" \
+            --repo "${REPO_NAME}" \
+            --body "⚠️ Failed to automatically set issue type. Please set it manually or contact the repository maintainers." || true
