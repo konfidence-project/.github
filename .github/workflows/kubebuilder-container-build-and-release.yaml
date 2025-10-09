@@ -147,7 +147,8 @@ jobs:
           push: ${{ inputs.push && needs.version.outputs.new-release-published }}
           set: |
             *.tags=${{ inputs.registry }}/${{ inputs.image-name }}:${{ needs.version.outputs.version }}
-            *.secrets=id=github_token,env=GH_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
        
 
       - name: Setup Kustomize
