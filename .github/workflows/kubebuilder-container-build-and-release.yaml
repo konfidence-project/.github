@@ -50,9 +50,6 @@ on:
         type: boolean
         default: true
     outputs:
-      image-digest:
-        description: SHA digest of the built image
-        value: ${{ jobs.build.outputs.digest }}
       metadata:
         description: Build metadata
         value: ${{ jobs.build.outputs.metadata }}
@@ -108,7 +105,6 @@ jobs:
     needs: version
    
     outputs:
-      digest: ${{ steps.docker-build.outputs.digest }}
       metadata: ${{ steps.docker-build.outputs.metadata }}
     permissions:
       contents: read
@@ -177,7 +173,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     needs: [version, build]
-    if: ${{ needs.build.outputs.digest && needs.version.outputs.new-release-published && inputs.release }}
+    if: ${{ needs.build.outputs.metadata && needs.version.outputs.new-release-published && inputs.release }}
     permissions:
       contents: write
       issues: write
