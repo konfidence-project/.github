@@ -121,6 +121,11 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Setup GitHub Repo Access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
+        with:
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
