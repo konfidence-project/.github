@@ -21,7 +21,7 @@ jobs:
     steps:
       # Step 1: Checkout repository to access any configuration files if needed
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Step 2: Set issue type based on labels
       - name: Set Issue Type from Label
