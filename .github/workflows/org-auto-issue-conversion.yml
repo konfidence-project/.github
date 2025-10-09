@@ -17,11 +17,17 @@
 # - Check workflow run logs for detailed error messages and setup instructions
 # - Verify KONFIDENCE_PROJECT_ORG_TOKEN has the required permissions in organization settings
 
-name: org-auto-issue-conversion.yml
+name: Organization Auto Issue Conversion (Labels to Issue Types)
 
 on:
   issues:
     types: [opened, labeled, unlabeled]
+
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process'
+        required: true
 
 # Required permissions for the workflow
 permissions:
