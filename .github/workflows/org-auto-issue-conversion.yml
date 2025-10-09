@@ -95,7 +95,7 @@ jobs:
           ISSUE_TYPE_ID=$(gh api graphql \
             -H "GraphQL-Features: issue_types" \
             -f query='
-            query($org: String!, $typeName: String!) {
+            query($org: String!) {
               organization(login: $org) {
                 issueTypes(first: 25) {
                   nodes {
@@ -105,7 +105,7 @@ jobs:
                 }
               }
             }
-          ' -f org="${ORG_NAME}" -f typeName="${TARGET_TYPE}" \
+          ' -f org="${ORG_NAME}" \
           --jq ".data.organization.issueTypes.nodes[] | select(.name == \"${TARGET_TYPE}\") | .id")
           
           # Check if issue type was found
