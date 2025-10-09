@@ -142,7 +142,7 @@ jobs:
           push: ${{ inputs.push && needs.version.outputs.new-release-published }}
           set: |
             *.tags=${{ inputs.registry }}/${{ inputs.image-name }}:${{ needs.version.outputs.version }}
-            *.secret=id=github_token,env=GITHUB_TOKEN
+            *.secrets=id=github_token,env=GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
