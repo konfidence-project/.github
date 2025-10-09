@@ -1,6 +1,7 @@
 name: Bug Report
 description: Report a bug to help us improve
 projects: ["konfidence-project/7"]
+labels: ["process/triage"]
 type: Bug
 body:
   - type: markdown

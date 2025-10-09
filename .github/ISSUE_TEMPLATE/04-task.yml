@@ -1,7 +1,7 @@
 name: Task
 description: Create a new task
-labels: ["process/needs-conversion", "issue-type/task"]
 projects: ["konfidence-project/7"]
+type: Task
 body:
   - type: markdown
     attributes:
