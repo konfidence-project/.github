@@ -196,11 +196,6 @@ jobs:
             --method DELETE \
             "/repos/${REPO_NAME}/issues/${ISSUE_NUMBER}/labels/process%2Fneeds-conversion" \
             2>/dev/null || echo "ℹ️  Label 'process/needs-conversion' not found or already removed"
-          
-          # Step 7: Add a comment to the issue
-          gh issue comment "${ISSUE_NUMBER}" \
-            --repo "${REPO_NAME}" \
-            --body "🤖 Automatically set issue type to **${TARGET_TYPE}** based on label **\`${MATCHED_LABEL}\`** and removed **\`process/needs-conversion\`** label."
 
       # Step 8: Handle errors gracefully
       - name: Handle Errors
