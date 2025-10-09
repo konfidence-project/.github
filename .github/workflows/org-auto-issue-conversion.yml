@@ -17,7 +17,7 @@
 # - Check workflow run logs for detailed error messages and setup instructions
 # - Verify KONFIDENCE_PROJECT_ORG_TOKEN has the required permissions in organization settings
 
-name: Auto-assign Issue Type from Labels
+name: org-auto-issue-conversion.yml
 
 on:
   issues:
