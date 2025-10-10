@@ -77,13 +77,13 @@ jobs:
           fetch-depth: 0
           
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
+        uses: konfidence-project/.github/.github/actions/github-repo-access@feature/multi-platform-builds
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
           
       - name: Semantic Release (dry-run)
         id: semantic-release-dry-run
-        uses: konfidence-project/.github/.github/actions/semantic-release@v1
+        uses: konfidence-project/.github/.github/actions/semantic-release@feature/multi-platform-builds
         with:
           dry-run: true
           
@@ -118,7 +118,7 @@ jobs:
           fetch-depth: 0
       
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
+        uses: konfidence-project/.github/.github/actions/github-repo-access@feature/multi-platform-builds
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
       
@@ -187,7 +187,7 @@ jobs:
           fetch-depth: 0
           
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
+        uses: konfidence-project/.github/.github/actions/github-repo-access@feature/multi-platform-builds
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
@@ -229,4 +229,4 @@ jobs:
 
       - name: Semantic Release (create release)
         id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@v1
+        uses: konfidence-project/.github/.github/actions/semantic-release@feature/multi-platform-builds
