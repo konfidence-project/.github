@@ -95,6 +95,9 @@
               "hidden": true
             }
           ]
+        },
+        "writerOpts": {
+          "footerPartial": "{{#if @root.IMAGE_REGISTRY}}\n\n---\n\n## Container Images\n\n**Registry:** `{{@root.IMAGE_REGISTRY}}`\n**Repository:** `{{@root.IMAGE_NAME}}`\n**Version:** `{{@root.IMAGE_VERSION}}`\n\n### Pull Command\n\n```bash\ndocker pull {{@root.IMAGE_REGISTRY}}/{{@root.IMAGE_NAME}}:{{@root.IMAGE_VERSION}}\n```\n\n### View in Registry\n\n- [View on GitHub Container Registry](https://{{@root.IMAGE_REGISTRY}}/{{@root.IMAGE_NAME}})\n\n<{{#if @root.IMAGE_DIGEST}}\n### Image Digest\n\nFor enhanced security and reproducibility, you can pull by digest:\n\n```bash\ndocker pull {{@root.IMAGE_REGISTRY}}/{{@root.IMAGE_NAME}}@{{@root.IMAGE_DIGEST}}\n```\n{{/if}}\n{{/if}}"
         }
       }
     ],
