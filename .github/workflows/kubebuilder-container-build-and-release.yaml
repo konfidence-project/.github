@@ -143,6 +143,7 @@ jobs:
           push: ${{ inputs.push && needs.version.outputs.new-release-published }}
           set: |
             *.tags=${{ inputs.registry }}/${{ inputs.image-name }}:${{ needs.version.outputs.version }}
+            *.secret=id=gh_token,env=GH_TOKEN
         env:
           GH_TOKEN: ${{ env.GH_TOKEN }}
        
