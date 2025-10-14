@@ -1,0 +1,94 @@
+name: Kubebuilder CI
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        description: Container image name (without registry/tag)
+        type: string
+        default: ${{ github.repository }}
+      registry:
+        description: Container registry URL
+        required: false
+        type: string
+        default: 'ghcr.io'
+      dockerfile:
+        description: Path to Dockerfile
+        required: false
+        type: string
+        default: 'Dockerfile'
+      context:
+        description: Build context path
+        required: false
+        type: string
+        default: '.'
+      bake-file:
+        description: Path to docker-bake.hcl file
+        required: false
+        type: string
+        default: 'docker-bake.hcl'
+      targets:
+        description: Bake targets to build (comma-separated, empty = all)
+        required: false
+        type: string
+        default: ''
+      
+      # Test configuration
+      with-kind-cluster:
+        description: Whether to set up a kind cluster for tests
+        required: false
+        type: boolean
+        default: false
+      install-crds:
+        description: Whether to install CRDs before tests
+        required: false
+        type: boolean
+        default: false
+      before-tests:
+        description: Command to run before tests
+        required: false
+        type: string
+        default: ''
+      
+      # Release manifest configuration
+      release_manifests:
+        description: Whether to generate k8s deployment manifests as release assets
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint:
+    name: Lint
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@feature/multi-platform-builds
+    secrets: inherit
+
+  test:
+    name: Test
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@feature/multi-platform-builds
+    secrets: inherit
+    with:
+      with-kind-cluster: ${{ inputs.with-kind-cluster }}
+      install-crds: ${{ inputs.install-crds }}
+      before-tests: ${{ inputs.before-tests }}
+
+  build:
+    name: Build Container Image
+    needs: [lint, test]
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-container-build-and-release.yaml@feature/multi-platform-builds
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: read
+      attestations: write
+      id-token: write
+    with:
+      image-name: ${{ inputs.image-name }}
+      registry: ${{ inputs.registry }}
+      push: false  # CI builds don't push
+      release: false  # CI builds don't release
+      dockerfile: ${{ inputs.dockerfile }}
+      context: ${{ inputs.context }}
+      bake-file: ${{ inputs.bake-file }}
+      targets: ${{ inputs.targets }}
+      release_manifests: ${{ inputs.release_manifests }}
