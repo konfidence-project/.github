@@ -32,13 +32,6 @@ on:
         required: false
         type: string
         default: ''
-      
-      # Test configuration (optional for release workflow)
-      run-tests:
-        description: Whether to run tests before release
-        required: false
-        type: boolean
-        default: false
       with-kind-cluster:
         description: Whether to set up a kind cluster for tests
         required: false
@@ -138,14 +131,12 @@ jobs:
           echo "  Full tag: ${IMAGE_TAG}"
   lint:
     name: Lint
-    if: ${{ inputs.run-tests }}
     needs: [image-info]
     uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@feature/multi-platform-builds
     secrets: inherit
 
   test:
     name: Test
-    if: ${{ inputs.run-tests }}
     needs: [image-info]
     uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@feature/multi-platform-builds
     secrets: inherit
