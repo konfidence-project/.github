@@ -156,7 +156,7 @@ jobs:
 
   build-and-release:
     name: Build and Release Container Image
-    needs: ${{ inputs.run-tests && '[image-info, lint, test]' || '[image-info]' }}
+    needs: [image-info, lint, test]
     uses: konfidence-project/.github/.github/workflows/kubebuilder-container-build-and-release.yaml@feature/multi-platform-builds
     secrets: inherit
     permissions:
@@ -176,6 +176,3 @@ jobs:
       bake-file: ${{ inputs.bake-file }}
       targets: ${{ inputs.targets }}
       release_manifests: ${{ inputs.release_manifests }}
-      # Pass pre-calculated image information to ensure consistency
-      version: ${{ needs.image-info.outputs.version }}
-      image-tag: ${{ needs.image-info.outputs.image-tag }}
