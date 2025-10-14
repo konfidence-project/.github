@@ -208,35 +208,6 @@ jobs:
           name: controller.deployment.yaml
           path: dist
 
-      - name: Extract Image Information
-        id: image-info
-        shell: bash
-        run: |
-          # Extract image digest from metadata if available
-          METADATA='${{ needs.build.outputs.metadata }}'
-          
-          # Try to extract digest from metadata JSON
-          IMAGE_DIGEST=""
-          if [ -n "$METADATA" ]; then
-            IMAGE_DIGEST=$(echo "$METADATA" | jq -r '."containerimage.digest" // empty' 2>/dev/null || echo "")
-          fi
-          
-          # Export image information for semantic-release
-          echo "IMAGE_REGISTRY=${{ inputs.registry }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ inputs.image-name }}" >> $GITHUB_ENV
-          echo "IMAGE_VERSION=${{ needs.version.outputs.version }}" >> $GITHUB_ENV
-          if [ -n "$IMAGE_DIGEST" ]; then
-            echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
-          fi
-          
-          echo "Image information extracted for release notes"
-          echo "Registry: ${{ inputs.registry }}"
-          echo "Image: ${{ inputs.image-name }}"
-          echo "Version: ${{ needs.version.outputs.version }}"
-          if [ -n "$IMAGE_DIGEST" ]; then
-            echo "Digest: $IMAGE_DIGEST"
-          fi
-
       - name: Semantic Release (create release)
         id: semantic-release
         uses: konfidence-project/.github/.github/actions/semantic-release@feature/multi-platform-builds
