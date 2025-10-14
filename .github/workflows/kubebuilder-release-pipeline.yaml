@@ -148,7 +148,7 @@ jobs:
   build-and-release:
     name: Build and Release Container Image
     needs: [image-info, lint, test]
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-container-build-and-release.yaml@feature/multi-platform-builds
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@feature/multi-platform-builds
     secrets: inherit
     permissions:
       contents: write
