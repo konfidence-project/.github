@@ -1,4 +1,4 @@
-name: Kubebuilder Release
+name: Kubebuilder Release Pipeline
 
 on:
   workflow_call:
