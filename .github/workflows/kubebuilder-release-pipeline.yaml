@@ -85,13 +85,13 @@ jobs:
           fetch-depth: 0
           
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@feature/multi-platform-builds
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
           
       - name: Determine version via semantic-release (dry-run)
         id: semantic-release-dry-run
-        uses: konfidence-project/.github/.github/actions/semantic-release@feature/multi-platform-builds
+        uses: konfidence-project/.github/.github/actions/semantic-release@v1
         with:
           dry-run: true
           
@@ -132,13 +132,13 @@ jobs:
   lint:
     name: Lint
     needs: [image-info]
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@feature/multi-platform-builds
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
     secrets: inherit
 
   test:
     name: Test
     needs: [image-info]
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@feature/multi-platform-builds
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
     secrets: inherit
     with:
       with-kind-cluster: ${{ inputs.with-kind-cluster }}
@@ -148,7 +148,7 @@ jobs:
   build-and-release:
     name: Build and Release Container Image
     needs: [image-info, lint, test]
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@feature/multi-platform-builds
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v1
     secrets: inherit
     permissions:
       contents: write
