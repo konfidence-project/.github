@@ -1,0 +1,169 @@
+name: Kubebuilder Release Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        description: Container image name (without registry/tag)
+        type: string
+        default: ${{ github.repository }}
+      registry:
+        description: Container registry URL
+        required: false
+        type: string
+        default: 'ghcr.io'
+      dockerfile:
+        description: Path to Dockerfile
+        required: false
+        type: string
+        default: 'Dockerfile'
+      context:
+        description: Build context path
+        required: false
+        type: string
+        default: '.'
+      bake-file:
+        description: Path to docker-bake.hcl file
+        required: false
+        type: string
+        default: 'docker-bake.hcl'
+      targets:
+        description: Bake targets to build (comma-separated, empty = all)
+        required: false
+        type: string
+        default: ''
+      with-kind-cluster:
+        description: Whether to set up a kind cluster for tests
+        required: false
+        type: boolean
+        default: false
+      install-crds:
+        description: Whether to install CRDs before tests
+        required: false
+        type: boolean
+        default: false
+      before-tests:
+        description: Command to run before tests
+        required: false
+        type: string
+        default: ''
+      
+      # Release configuration
+      release_manifests:
+        description: Whether to generate k8s deployment manifests as release assets
+        required: false
+        type: boolean
+        default: true
+
+    outputs:
+      metadata:
+        description: Build metadata
+        value: ${{ jobs.build-and-release.outputs.metadata }}
+      version:
+        description: Version that was created
+        value: ${{ jobs.image-info.outputs.version }}
+      image-tag:
+        description: Full container image tag
+        value: ${{ jobs.image-info.outputs.image-tag }}
+      image-digest:
+        description: Container image digest
+        value: ${{ jobs.build-and-release.outputs.metadata }}
+
+jobs:
+  image-info:
+    name: Calculate Image Information
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image-tag: ${{ steps.image-tag.outputs.image-tag }}
+      registry: ${{ steps.image-tag.outputs.registry }}
+      image-name: ${{ steps.image-tag.outputs.image-name }}
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          
+      - name: Setup GitHub Repo Access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v1
+        with:
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          
+      - name: Determine version via semantic-release (dry-run)
+        id: semantic-release-dry-run
+        uses: konfidence-project/.github/.github/actions/semantic-release@v1
+        with:
+          dry-run: true
+          
+      - name: Calculate version
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ steps.semantic-release-dry-run.outputs.new-release-version }}" ]; then
+            VERSION="${{ steps.semantic-release-dry-run.outputs.new-release-version }}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "✅ Using semantic-release version: ${VERSION}"
+          else
+            VERSION="${{ github.sha }}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "⚠️ Using fallback git sha version: ${VERSION}"
+          fi
+
+      - name: Calculate image tag
+        id: image-tag
+        shell: bash
+        run: |
+          REGISTRY="${{ inputs.registry }}"
+          IMAGE_NAME="${{ inputs.image-name }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Construct full image tag
+          IMAGE_TAG="${REGISTRY}/${IMAGE_NAME}:${VERSION}"
+          
+          echo "registry=${REGISTRY}" >> $GITHUB_OUTPUT
+          echo "image-name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          
+          echo "📦 Container image information calculated:"
+          echo "  Registry: ${REGISTRY}"
+          echo "  Image: ${IMAGE_NAME}"
+          echo "  Version: ${VERSION}"
+          echo "  Full tag: ${IMAGE_TAG}"
+  lint:
+    name: Lint
+    needs: [image-info]
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
+    secrets: inherit
+
+  test:
+    name: Test
+    needs: [image-info]
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
+    secrets: inherit
+    with:
+      with-kind-cluster: ${{ inputs.with-kind-cluster }}
+      install-crds: ${{ inputs.install-crds }}
+      before-tests: ${{ inputs.before-tests }}
+
+  build-and-release:
+    name: Build and Release Container Image
+    needs: [image-info, lint, test]
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v1
+    secrets: inherit
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+      attestations: write
+      id-token: write
+    with:
+      image-name: ${{ inputs.image-name }}
+      registry: ${{ inputs.registry }}
+      push: true  # Release builds push
+      release: true  # Release builds create releases
+      dockerfile: ${{ inputs.dockerfile }}
+      context: ${{ inputs.context }}
+      bake-file: ${{ inputs.bake-file }}
+      targets: ${{ inputs.targets }}
+      release_manifests: ${{ inputs.release_manifests }}
