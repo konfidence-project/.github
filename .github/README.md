@@ -10,6 +10,96 @@ This .github directory inside the .github repository contains shared files and c
 
 ## Available Workflows
 
+### Composite Pipeline Workflows (v2+)
+
+**New in v2:** Composite workflows that orchestrate multiple atomic workflows for cleaner integration of kubebuilder repos.
+
+#### Kubebuilder CI Pipeline ([`kubebuilder-ci-pipeline.yaml`](./workflows/kubebuilder-ci-pipeline.yaml))
+
+Orchestrates linting, testing, and building for CI scenarios (PRs and non-main branches).
+
+**What it does:**
+- Runs Go linting via `golang-lint.yaml`
+- Runs tests via `kubebuilder-test.yaml`
+- Builds multi-platform container images (no push/release)
+
+**Usage:**
+```yaml
+# .github/workflows/ci.yaml
+name: CI
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  ci:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
+    secrets: inherit
+    with:
+      with-kind-cluster: false
+      install-crds: false
+      before-tests: make generate-test-crds
+```
+
+**Inputs:**
+- `with-kind-cluster` (default: `false`): Set up Kind cluster for tests
+- `install-crds` (default: `false`): Install CRDs before tests
+- `before-tests`: Command to run before tests
+- `image-name`: Container image name (default: `${{ github.repository }}`)
+- `registry` (default: `ghcr.io`): Container registry
+- All inputs from atomic workflows (dockerfile, context, bake-file, etc.)
+
+#### Kubebuilder Release Pipeline ([`kubebuilder-release-pipeline.yaml`](./workflows/kubebuilder-release-pipeline.yaml))
+
+Orchestrates linting, testing, building, and releasing for main branch deployments.
+
+**What it does:**
+- Calculates semantic version and image tags (single source of truth)
+- Runs Go linting via `golang-lint.yaml`
+- Runs tests via `kubebuilder-test.yaml`
+- Builds multi-platform images and creates GitHub releases
+
+**Usage:**
+```yaml
+# .github/workflows/release.yaml
+name: Release
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-release-pipeline.yaml@v2
+    secrets: inherit
+    with:
+      before-tests: make generate-test-crds
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+      attestations: write
+      id-token: write
+```
+
+**Key Features:**
+- **Image Tag Calculation:** Generates the image tag which is used for docker build and kustomize
+- **Semantic Version Dry-Run:** Determines next version before building
+- **Parallel Execution:** Lint and test run concurrently after version calculation
+
+**Outputs:**
+- `metadata`: Build metadata from Docker
+- `version`: Semantic version created
+- `image-tag`: Full container image tag
+- `image-digest`: Container image digest
+
+---
+
+### Atomic Workflows
+
+These workflows handle specific tasks and can be used individually or via pipeline workflows.
+
 ### 1. Golang Lint ([`golang-lint.yaml`](./workflows/golang-lint.yaml))
 
 Runs golangci-lint on Go projects with private repository access.
@@ -66,9 +156,11 @@ test-e2e:
 ```
 
 
-### 3. Kubebuilder Container Build and Release ([`kubebuilder-container-build-and-release.yaml`](./workflows/kubebuilder-container-build-and-release.yaml))
+### 3. Kubebuilder Build and Release ([`kubebuilder-build-and-release.yaml`](./workflows/kubebuilder-build-and-release.yaml))
 
-Builds container images with semantic versioning and GitHub release creation.
+Builds multi-platform container images with semantic versioning and GitHub release creation.
+
+
 
 **Inputs:**
 - `push` (default: `true`): Push image to registry
@@ -77,16 +169,21 @@ Builds container images with semantic versioning and GitHub release creation.
 - `registry` (default: `ghcr.io`): Container registry
 - `dockerfile` (default: `Dockerfile`): Path to Dockerfile
 - `context` (default: `.`): Build context
+- `bake-file` (default: `docker-bake.hcl`): Path to docker-bake configuration
+- `targets`: Bake targets to build (comma-separated, empty = all)
+- `platforms` (default: `linux/amd64,linux/arm64`): Target platforms
+- `release_manifests` (default: `true`): Generate k8s manifests as release assets
 
 **Outputs:**
 - `new-release-published`: `true`/`false`
 - `new-release-version`: Release version
+- `metadata`: Docker build metadata
 
 **Usage:**
 ```yaml
 jobs:
   build-and-release:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-container-build-and-release.yaml@v1
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v2
     secrets: inherit
     with:
       push: true
@@ -123,6 +220,111 @@ jobs:
       pull-requests: write
       id-token: write
 ```
+
+## Multi-Platform Build Requirements (v2+)
+
+All Kubebuilder projects must support multi-platform builds using BuildKit secrets and docker-bake.
+
+### Dockerfile Requirements
+
+Currently, the Dockerfiles use a BuildKit secret to be able to pull the private Go modules.
+
+#### Example Dockerfile
+
+```dockerfile
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /workspace
+
+RUN apk add --no-cache git ca-certificates
+
+COPY go.mod go.sum ./
+
+ENV GOPRIVATE=github.com/konfidence-project/*
+RUN --mount=type=secret,id=gh_token \
+    GH_TOKEN=$(cat /run/secrets/gh_token) && \
+    git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/" && \
+    go mod download && \
+    git config --global --unset url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf
+
+COPY cmd/ cmd/
+COPY internal/ internal/
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
+    go build -a -o manager cmd/main.go
+
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /workspace/manager .
+USER 65532:65532
+
+ENTRYPOINT ["/manager"]
+```
+
+**Key points:**
+- `--mount=type=secret,id=gh_token`: Mounts secret at build time only
+- Token is read from `/run/secrets/gh_token` and never stored in layers
+- `git config --unset`: Cleans up git configuration after use
+- Multi-platform args (`TARGETOS`, `TARGETARCH`) enable cross-compilation
+
+
+### docker-bake.hcl Configuration
+
+All projects must include a `docker-bake.hcl` file for multi-platform builds:
+
+```hcl
+variable "TAG" {
+  default = "dev"
+}
+
+variable "REGISTRY" {
+  default = "ghcr.io/konfidence-project"
+}
+
+group "default" {
+  targets = ["my-operator"]
+}
+
+target "my-operator" {
+  context    = "."
+  dockerfile = "Dockerfile"
+  platforms  = ["linux/amd64", "linux/arm64"]
+  tags       = ["${REGISTRY}/my-operator:${TAG}"]
+  
+  # Maps GH_TOKEN environment variable to gh_token secret
+  secret = ["id=gh_token,env=GH_TOKEN"]
+}
+```
+
+**Configuration explained:**
+- `platforms`: Defines target architectures
+- `secret`: Maps environment variable to BuildKit secret ID
+- `tags`: Image tags (can use variables for dynamic values)
+
+### Local Development
+
+Building locally with multi-platform support:
+
+```bash
+# Set GitHub token
+export GH_TOKEN="ghp_your_token_here"
+
+# Build for all platforms
+docker buildx bake
+
+# Build for specific platform
+docker buildx bake --set *.platform=linux/amd64 --load
+
+# Build with custom tag
+docker buildx bake --set *.tags=my-operator:test --load
+```
+
+> You can print out a GitHub token with `gh auth token`.
+
 
 ## Available Actions
 
@@ -202,86 +404,45 @@ Executes semantic-release with shared configuration.
 
 ## Integration Examples
 
-### CI Workflow (No Push/Release)
+### Recommended: Pipeline Workflows
 
-For pull requests and non-main branches:
+#### CI Workflow (Pull Requests)
 
 ```yaml
 # .github/workflows/ci.yaml
-name: Kubebuilder CI
+name: CI
 on:
-  push:
-    branches-ignore:
-      - main # For commit on main branches, the release workflow will run
   pull_request:
-    branches:
-      - main
+  push:
+    branches-ignore: [main]
 
 jobs:
-  lint:
-    name: Lint
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
+  ci:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
     secrets: inherit
-
-  test:
-    name: Test
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
-    secrets: inherit
-    with:
-      with-kind-cluster: true
-      install-crds: true
-      crds-version: v0.0.1
-
-  build:
-    name: Build Container Image
-    if: github.event_name == 'pull_request'
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-container-build-and-release.yaml@v1
-    secrets: inherit
-    with:
-      push: false  # Don't push the built container image in CI
-      release: false  # Don't create releases in CI
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      packages: write
+      contents: read
+      packages: read
       attestations: write
       id-token: write
+    with:
+      with-kind-cluster: false
+      install-crds: false
+      before-tests: make generate-test-crds
 ```
 
-### Release Workflow (Push & Release)
-
-For main branch deployments:
+#### Release Workflow (Main Branch)
 
 ```yaml
 # .github/workflows/release.yaml
 name: Release
-
 on:
   push:
     branches: [main]
 
 jobs:
-  lint:
-    name: Lint
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
-    secrets: inherit
-
-  test:
-    name: Test
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
-    secrets: inherit
-    with:
-      with-kind-cluster: true
-      install-crds: true
-      crds-version: "6f560b268fa798ee96457551578fe84e90ae2acf"
-
-  build-and-release:
-    needs:
-      - lint
-      - test
-    name: Build and Release Container Image
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-container-build-and-release.yaml@v1
+  release:
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-release-pipeline.yaml@v2
     secrets: inherit
     permissions:
       contents: write
@@ -290,11 +451,9 @@ jobs:
       packages: write
       attestations: write
       id-token: write
+    with:
+      before-tests: make generate-test-crds
 ```
-
-**Key Differences:**
-- **CI Workflow**: Jobs run in parallel, `push: false` and `release: false` to avoid pushing artifacts and creating releases
-- **Release Workflow**: Jobs run sequentially with dependencies, full push and release enabled
 
 ## Organization Files
 
@@ -322,23 +481,27 @@ All jobs using these shared workflows require `secrets: inherit` to access the o
 - `KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY`: GitHub App private key for accessing private repositories
 
 ### Versioning of Workflows
-Use major version tags (e.g., `@v1`) which are automatically updated to point to the latest release. Updates are only needed when breaking changes are introduced.
+Use major version tags (e.g., `@v2`) which are automatically updated to point to the latest release. Updates are only needed when breaking changes are introduced.
 
 ```yaml
-# ✅ Recommended: Always gets latest v1.x.x
-uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
+# ✅ Recommended: Always gets latest v2.x.x
+uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
 
 # ❌ Not recommended: Pinned to specific version, misses updates
-uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1.2.3
+uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2.0.1
 
 # ⚠️ Use with caution: Always uses latest, may include breaking changes
-uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@main
+uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@main
 ```
+
+**Version History:**
+- **v2.x**: Multi-platform builds, BuildKit secrets, pipeline workflows
+- **v1.x**: Single-platform builds, individual workflows only
 
 **Version Tag Management:**
 - The release of the shared GitHub Workflows is configured within the [`release-workflow-version`](./workflows/release-workflow-version.yaml) workflow
-- When a new release is created, the major version tag (e.g., `v1`) is automatically updated to point to the latest release
-- This ensures all repositories using `@v1` automatically get the latest non-breaking updates
+- When a new release is created, the major version tag (e.g., `v2`) is automatically updated to point to the latest release
+- This ensures all repositories using `@v2` automatically get the latest non-breaking updates
 
 **Git Fetch Note:**
 > When fetching new changes with git using `git fetch` you may encounter following error: `! [rejected]        v1         -> v1  (would clobber existing tag)`. You can run  `git fetch -Pf` to force update the tag.
@@ -348,26 +511,14 @@ uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@main
 ### Private Module Access
 **Problem:** `go: module ... not found`
 
-Ensure `secrets: inherit` is set and organization secret `KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY` is configured.
-
-### Kind Cluster Issues
-**Problem:** Tests fail with Kubernetes errors
-
-Set `with-kind-cluster: true` and use specific `crds-version` commit hash instead of `main`.
+**Solution:** Ensure `secrets: inherit` is set and organization secret `KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY` is configured.
 
 ### No Release Created
 **Problem:** Workflow runs but no release
 
-Ensure commits follow [Conventional Commits](https://www.conventionalcommits.org/) format (`feat:`, `fix:`, etc.) and workflow runs on `main` branch.
+**Solution:** Ensure commits follow [Conventional Commits](https://www.conventionalcommits.org/) format (`feat:`, `fix:`, etc.) and workflow runs on `main` branch.
 
 ### Image Push Failures
 **Problem:** Build succeeds but push fails
 
-Verify `packages: write` permission is set in workflow.
-
-## Best Practices
-
-1. **Use specific CRD versions:** `crds-version: "e029cc3"` instead of `"main"`
-2. **Separate CI/Release workflows:** Use `push: false` and `release: false` in PR workflows
-3. **Follow conventional commits:** `feat:`, `fix:`, `perf:` for automatic versioning
-4. **Test before merging:** Run workflows in PRs before merging to main
+**Solution:** Verify `packages: write` permission is set in workflow.
