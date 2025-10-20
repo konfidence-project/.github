@@ -79,6 +79,8 @@ jobs:
     secrets: inherit
     permissions:
       contents: write
+      issues: write
+      pull-requests: write
       packages: write
       attestations: write
       id-token: write
