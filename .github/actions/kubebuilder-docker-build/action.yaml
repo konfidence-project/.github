@@ -1,3 +1,5 @@
+# TODO: UNUSED since version >= v2 and DEPRECATED
+
 name: Kubebuilder Docker Build
 description: Builds (and optionally pushes) a Kubebuilder container image
 

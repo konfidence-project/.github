@@ -18,21 +18,29 @@ on:
 
 jobs:
   kubebuilder-test:
-    name: Run on Ubuntu
+    name: Run Tests (${{ inputs.test-cmd }})
     runs-on: konfidence-large
     steps:
-      - name: Clone the code
+      - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v2
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-         
-      - name: Setup Go
-        uses: konfidence-project/.github/.github/actions/setup-go@v2
 
-      - name: Before Tests Setup
+      - name: Init Hermit
+        uses: cashapp/activate-hermit@v1
+
+      - name: Activate Hermit
+        run: |
+          eval "$(./bin/hermit env --raw)"
+          echo "PATH=$PATH" >> $GITHUB_ENV
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
+
+      - name: Run script before tests
         if: ${{ inputs.before-tests }}
         run: ${{ inputs.before-tests }}
 
@@ -41,6 +49,6 @@ jobs:
           go mod tidy
           make ${{ inputs.test-cmd }}
 
-      - name: After Tests Cleanup
+      - name: Run script after tests
         if: ${{ inputs.after-tests }}
         run: ${{ inputs.after-tests }}

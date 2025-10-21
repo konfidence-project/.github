@@ -56,6 +56,9 @@ on:
       version:
         description: Version that was created
         value: ${{ jobs.version.outputs.version }}
+      image-tag:
+        description: Full container image tag
+        value: ${{ jobs.version.outputs.image-tag }}
 
 env:
   REGISTRY: ${{ inputs.registry }}
@@ -63,7 +66,7 @@ env:
 
 jobs:
   version:
-    name: Determine next version
+    name: Prepare release version and tags
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.determine-version.outputs.version }}
@@ -72,19 +75,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Clone the code
+      - name: Checkout code
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v2
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
-      - name: Semantic Release (dry-run)
+      - name: Check Semantic Release (dry-run)
         id: semantic-release-dry-run
-        uses: konfidence-project/.github/.github/actions/semantic-release@v2
+        uses: konfidence-project/.github/.github/actions/semantic-release@v3
         with:
           dry-run: true
 
@@ -122,17 +125,25 @@ jobs:
       attestations: write
       id-token: write
     steps:
-      - name: Clone the code
+      - name: Checkout code
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
+      - name: Init Hermit
+        uses: cashapp/activate-hermit@v1
+
+      - name: Activate Hermit
+        run: |
+          eval "$(./bin/hermit env --raw)"
+          echo "PATH=$PATH" >> $GITHUB_ENV
+
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v2
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Container Registry
@@ -143,7 +154,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push with Bake
+      - name: Build and Push with bake
         id: docker-build
         uses: docker/bake-action@v6
         with:
@@ -156,10 +167,6 @@ jobs:
             *.secrets=id=gh_token,env=GH_TOKEN
         env:
           GH_TOKEN: ${{ env.GH_TOKEN }}
-
-      - name: Setup Kustomize
-        if: ${{ inputs.release && inputs.release_manifests }}
-        uses: imranismail/setup-kustomize@v2
 
       - name: Generate release artifacts
         if: ${{ inputs.release && inputs.release_manifests }}
@@ -189,13 +196,13 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - name: Clone the code
+      - name: Checkout code
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v2
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
@@ -206,6 +213,6 @@ jobs:
           name: controller.deployment.yaml
           path: dist
 
-      - name: Semantic Release (create release)
+      - name: Create Semantic Release
         id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@v2
+        uses: konfidence-project/.github/.github/actions/semantic-release@v3

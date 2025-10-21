@@ -1,4 +1,6 @@
-on: 
+# TODO: UNUSED since version >= v2 and DEPRECATED
+
+on:
   push: 
     branches: ["main"]
 

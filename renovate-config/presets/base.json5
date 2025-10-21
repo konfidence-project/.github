@@ -16,5 +16,9 @@
 
     { matchManagers: ["gomod"],     matchUpdateTypes: ["patch"],  automerge: true, platformAutomerge: true },
     { matchManagers: ["github-actions"], matchUpdateTypes: ["digest","patch"], automerge: true, platformAutomerge: true }
-  ]
+  ],
+  hermit: {
+    enabled: true,
+  },
+
 }

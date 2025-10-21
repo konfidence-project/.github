@@ -50,12 +50,12 @@ on:
 jobs:
   lint:
     name: Lint
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v3
     secrets: inherit
 
   test:
     name: Test
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v3
     secrets: inherit
     with:
       before-tests: ${{ inputs.before-tests }}
@@ -63,7 +63,7 @@ jobs:
   build:
     name: Build Container Image
     needs: [lint, test]
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v3
     secrets: inherit
     permissions:
       contents: write
