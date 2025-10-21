@@ -1,3 +1,5 @@
+# TODO: UNUSED since version >= v2 and DEPRECATED
+
 name: Setup Go with Private Repository Access
 description: Sets up Go and configures GitHub CLI authentication for private repositories inside this org (konfidence-project)
 inputs:

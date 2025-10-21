@@ -5,21 +5,29 @@ on:
 
 jobs:
   lint:
-    name: Run on Ubuntu
+    name: Lint Golang
     runs-on: ubuntu-latest
     steps:
-      - name: Clone the code
+      - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Init Hermit
+        uses: cashapp/activate-hermit@v1
+
+      - name: Activate Hermit
+        run: |
+          eval "$(./bin/hermit env --raw)"
+          echo "PATH=$PATH" >> $GITHUB_ENV
+
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v2
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
           
-      - name: Setup Go with private repos
-        uses: konfidence-project/.github/.github/actions/setup-go@v2
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
       
-      - name: Run linter
+      - name: Run golang linter
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1.6 
+          version: v2.1.6

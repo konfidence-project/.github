@@ -34,7 +34,7 @@ on:
 
 jobs:
   ci:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v3
     secrets: inherit
     with:
       before-tests: make generate-test-crds
@@ -66,7 +66,7 @@ on:
 
 jobs:
   release:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-release-pipeline.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-release-pipeline.yaml@v3
     secrets: inherit
     with:
       before-tests: make generate-test-crds
@@ -106,7 +106,7 @@ Runs golangci-lint on Go projects with private repository access.
 ```yaml
 jobs:
   lint:
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v3
     secrets: inherit
 ```
 
@@ -123,7 +123,7 @@ Testing workflow for Kubebuilder projects with optional Kind cluster and CRD ins
 ```yaml
 jobs:
   test:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v3
     secrets: inherit
     with:
       test-cmd: "test"
@@ -154,7 +154,7 @@ Builds multi-platform container images with semantic versioning and GitHub relea
 ```yaml
 jobs:
   build-and-release:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v3
     secrets: inherit
     with:
       push: true
@@ -183,7 +183,7 @@ Creates GitHub releases for Go modules without container building (libraries, CL
 ```yaml
 jobs:
   release:
-    uses: konfidence-project/.github/.github/workflows/go-module-release.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/go-module-release.yaml@v3
     secrets: inherit
     permissions:
       contents: write
@@ -308,7 +308,7 @@ Authenticates GitHub CLI for private repository access using GitHub App.
 
 **Usage:**
 ```yaml
-- uses: konfidence-project/.github/.github/actions/github-repo-access@v2
+- uses: konfidence-project/.github/.github/actions/github-repo-access@v3
   with:
     private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 ```
@@ -322,7 +322,7 @@ Configures Go with `GOPRIVATE` for konfidence-project repositories.
 
 **Usage:**
 ```yaml
-- uses: konfidence-project/.github/.github/actions/setup-go@v2
+- uses: konfidence-project/.github/.github/actions/setup-go@v3
 ```
 
 ### 3. Kubebuilder Docker Build ([`kubebuilder-docker-build`](./actions/kubebuilder-docker-build/action.yaml))
@@ -343,7 +343,7 @@ Builds Kubebuilder container images with manifests generation.
 
 **Usage:**
 ```yaml
-- uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@v2
+- uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@v3
   with:
     image-name: ghcr.io/konfidence-project/my-operator
     version: v1.0.0
@@ -365,7 +365,7 @@ Executes semantic-release with shared configuration.
 **Usage:**
 ```yaml
 - id: release
-  uses: konfidence-project/.github/.github/actions/semantic-release@v2
+  uses: konfidence-project/.github/.github/actions/semantic-release@v3
   with:
     dry-run: false
 ```
@@ -389,7 +389,7 @@ on:
 
 jobs:
   ci:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v3
     secrets: inherit
     permissions:
       contents: read
@@ -411,7 +411,7 @@ on:
 
 jobs:
   release:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-release-pipeline.yaml@v2
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-release-pipeline.yaml@v3
     secrets: inherit
     permissions:
       contents: write
@@ -450,14 +450,14 @@ All jobs using these shared workflows require `secrets: inherit` to access the o
 - `KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY`: GitHub App private key for accessing private repositories
 
 ### Versioning of Workflows
-Use major version tags (e.g., `@v2`) which are automatically updated to point to the latest release. Updates are only needed when breaking changes are introduced.
+Use major version tags (e.g., `@v3`) which are automatically updated to point to the latest release. Updates are only needed when breaking changes are introduced.
 
 ```yaml
 # ✅ Recommended: Always gets latest v2.x.x
-uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
+uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v3
 
 # ❌ Not recommended: Pinned to specific version, misses updates
-uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2.0.1
+uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v3.0.1
 
 # ⚠️ Use with caution: Always uses latest, may include breaking changes
 uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@main
@@ -469,8 +469,8 @@ uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@
 
 **Version Tag Management:**
 - The release of the shared GitHub Workflows is configured within the [`release-workflow-version`](./workflows/release-workflow-version.yaml) workflow
-- When a new release is created, the major version tag (e.g., `v2`) is automatically updated to point to the latest release
-- This ensures all repositories using `@v2` automatically get the latest non-breaking updates
+- When a new release is created, the major version tag (e.g., `v3`) is automatically updated to point to the latest release
+- This ensures all repositories using `@v3` automatically get the latest non-breaking updates
 
 **Git Fetch Note:**
 > When fetching new changes with git using `git fetch` you may encounter following error: `! [rejected]        v1         -> v1  (would clobber existing tag)`. You can run  `git fetch -Pf` to force update the tag.
