@@ -7,21 +7,6 @@ on:
           required: false
           type: string
           default: test
-        with-kind-cluster:
-          description: Whether to create a Kind cluster to test against
-          required: false
-          type: boolean
-          default: true
-        install-crds:
-            description: Whether to install CRDs
-            required: false
-            type: boolean
-            default: true
-        crds-version:
-            description: Version of CRDs to install
-            required: false
-            type: string
-            default: main
         before-tests:
             description: Command to run before tests (e.g., setup commands like make commands)
             required: false
@@ -46,38 +31,6 @@ jobs:
          
       - name: Setup Go
         uses: konfidence-project/.github/.github/actions/setup-go@v2
-
-      - name: Check out CRDs Repo
-        uses: actions/checkout@v5
-        if: ${{ inputs.install-crds && inputs.with-kind-cluster }}
-        with:
-          repository: konfidence-project/crds
-          ref: ${{ inputs.crds-version }}
-          path: crds
-          sparse-checkout: config/crd/bases # only checkout the generated CRDs
-          token: ${{ env.GH_TOKEN }}
-
-      - name: Install the latest version of kind
-        if: ${{ inputs.with-kind-cluster }}
-        run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
-
-      - name: Verify kind installation
-        if: ${{ inputs.with-kind-cluster }}
-        run: kind version
-      
-      - name: Create Kind Cluster
-        if: ${{ inputs.with-kind-cluster }}
-        run: |
-          kind create cluster --name kind-integration-test  
-          kubectl cluster-info --context kind-kind-integration-test
-
-      - name: Install CRDs
-        if: ${{ inputs.install-crds && inputs.with-kind-cluster }}
-        run: |
-          kubectl apply -f crds/config/crd/bases
 
       - name: Before Tests Setup
         if: ${{ inputs.before-tests }}

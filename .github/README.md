@@ -37,14 +37,10 @@ jobs:
     uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v2
     secrets: inherit
     with:
-      with-kind-cluster: false
-      install-crds: false
       before-tests: make generate-test-crds
 ```
 
 **Inputs:**
-- `with-kind-cluster` (default: `false`): Set up Kind cluster for tests
-- `install-crds` (default: `false`): Install CRDs before tests
 - `before-tests`: Command to run before tests
 - `image-name`: Container image name (default: `${{ github.repository }}`)
 - `registry` (default: `ghcr.io`): Container registry
@@ -110,7 +106,7 @@ Runs golangci-lint on Go projects with private repository access.
 ```yaml
 jobs:
   lint:
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v1
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v2
     secrets: inherit
 ```
 
@@ -119,9 +115,6 @@ jobs:
 Testing workflow for Kubebuilder projects with optional Kind cluster and CRD installation.
 
 **Inputs:**
-- `with-kind-cluster` (default: `true`): Create Kind cluster
-- `install-crds` (default: `true`): Install CRDs from konfidence-project/crds
-- `crds-version` (default: `main`): Git ref for CRDs (⚠️ use specific commit in production)
 - `test-cmd` (default: `test`): Make target to run
 - `before-tests`: Command to run before tests
 - `after-tests`: Command to run after tests
@@ -130,37 +123,15 @@ Testing workflow for Kubebuilder projects with optional Kind cluster and CRD ins
 ```yaml
 jobs:
   test:
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v1
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v2
     secrets: inherit
     with:
-      with-kind-cluster: true
-      install-crds: true
-      crds-version: "e029cc3"  # Use specific commit
       test-cmd: "test"
 ```
-
-**Examples:**
-```yaml
-# Unit tests (no cluster)
-test-unit:
-  with:
-    with-kind-cluster: false
-    install-crds: false
-
-# E2E tests (with cluster)
-test-e2e:
-  with:
-    with-kind-cluster: true
-    crds-version: "e029cc3"
-    test-cmd: "test-e2e"
-```
-
 
 ### 3. Kubebuilder Build and Release ([`kubebuilder-build-and-release.yaml`](./workflows/kubebuilder-build-and-release.yaml))
 
 Builds multi-platform container images with semantic versioning and GitHub release creation.
-
-
 
 **Inputs:**
 - `push` (default: `true`): Push image to registry
@@ -212,7 +183,7 @@ Creates GitHub releases for Go modules without container building (libraries, CL
 ```yaml
 jobs:
   release:
-    uses: konfidence-project/.github/.github/workflows/go-module-release.yaml@v1
+    uses: konfidence-project/.github/.github/workflows/go-module-release.yaml@v2
     secrets: inherit
     permissions:
       contents: write
@@ -337,7 +308,7 @@ Authenticates GitHub CLI for private repository access using GitHub App.
 
 **Usage:**
 ```yaml
-- uses: konfidence-project/.github/.github/actions/github-repo-access@v1
+- uses: konfidence-project/.github/.github/actions/github-repo-access@v2
   with:
     private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 ```
@@ -351,7 +322,7 @@ Configures Go with `GOPRIVATE` for konfidence-project repositories.
 
 **Usage:**
 ```yaml
-- uses: konfidence-project/.github/.github/actions/setup-go@v1
+- uses: konfidence-project/.github/.github/actions/setup-go@v2
 ```
 
 ### 3. Kubebuilder Docker Build ([`kubebuilder-docker-build`](./actions/kubebuilder-docker-build/action.yaml))
@@ -372,7 +343,7 @@ Builds Kubebuilder container images with manifests generation.
 
 **Usage:**
 ```yaml
-- uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@v1
+- uses: konfidence-project/.github/.github/actions/kubebuilder-docker-build@v2
   with:
     image-name: ghcr.io/konfidence-project/my-operator
     version: v1.0.0
@@ -394,7 +365,7 @@ Executes semantic-release with shared configuration.
 **Usage:**
 ```yaml
 - id: release
-  uses: konfidence-project/.github/.github/actions/semantic-release@v1
+  uses: konfidence-project/.github/.github/actions/semantic-release@v2
   with:
     dry-run: false
 ```
@@ -426,8 +397,6 @@ jobs:
       attestations: write
       id-token: write
     with:
-      with-kind-cluster: false
-      install-crds: false
       before-tests: make generate-test-crds
 ```
 
