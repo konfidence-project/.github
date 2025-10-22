@@ -32,16 +32,6 @@ on:
         required: false
         type: string
         default: ''
-      with-kind-cluster:
-        description: Whether to set up a kind cluster for tests
-        required: false
-        type: boolean
-        default: false
-      install-crds:
-        description: Whether to install CRDs before tests
-        required: false
-        type: boolean
-        default: false
       before-tests:
         description: Command to run before tests
         required: false
@@ -141,8 +131,6 @@ jobs:
     uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v2
     secrets: inherit
     with:
-      with-kind-cluster: ${{ inputs.with-kind-cluster }}
-      install-crds: ${{ inputs.install-crds }}
       before-tests: ${{ inputs.before-tests }}
 
   build-and-release:
