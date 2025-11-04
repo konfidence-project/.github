@@ -453,7 +453,7 @@ All jobs using these shared workflows require `secrets: inherit` to access the o
 Use major version tags (e.g., `@v3`) which are automatically updated to point to the latest release. Updates are only needed when breaking changes are introduced.
 
 ```yaml
-# ✅ Recommended: Always gets latest v2.x.x
+# ✅ Recommended: Always gets latest v3.x.x
 uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@v3
 
 # ❌ Not recommended: Pinned to specific version, misses updates
@@ -464,6 +464,7 @@ uses: konfidence-project/.github/.github/workflows/kubebuilder-ci-pipeline.yaml@
 ```
 
 **Version History:**
+- **v3.x**: introduce hermit in pipelines
 - **v2.x**: Multi-platform builds, BuildKit secrets, pipeline workflows
 - **v1.x**: Single-platform builds, individual workflows only
 
