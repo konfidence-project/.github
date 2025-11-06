@@ -1,24 +1,60 @@
 {
   // This file is in JSON5 format: https://json5.org
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["config:recommended", ":semanticCommits", ":prHourlyLimitNone"],
-  labels: ["renovate"],
-  ignorePaths: ["vendir/"],
+  extends: [
+    "config:recommended",
+    ":semanticCommits",
+    ":prHourlyLimitNone"
+  ],
+  labels: [
+    "renovate"
+  ],
+  ignorePaths: [
+    "vendir/"
+  ],
   rangeStrategy: "bump",
   packageRules: [
     {
       // auto-merge only safe updates
-      matchUpdateTypes: ["patch", "digest"],
-      automerge: true,                 // let Renovate auto-merge
-      automergeType: "pr",             // merge the PR (safer than branch)
-      platformAutomerge: true,         // let GitHub do the merge once checks pass
+      matchUpdateTypes: [
+        "patch",
+        "digest"
+      ],
+      automerge: true,
+      // let Renovate auto-merge
+      automergeType: "pr",
+      // merge the PR (safer than branch)
+      platformAutomerge: true,
+      // let GitHub do the merge once checks pass
     },
-
-    { matchManagers: ["gomod"],     matchUpdateTypes: ["patch"],  automerge: true, platformAutomerge: true },
-    { matchManagers: ["github-actions"], matchUpdateTypes: ["digest","patch"], automerge: true, platformAutomerge: true },
     {
-      matchManagers: ["hermit"],
-      matchUpdateTypes: ["patch"],
+      matchManagers: [
+        "gomod"
+      ],
+      matchUpdateTypes: [
+        "patch"
+      ],
+      automerge: true,
+      platformAutomerge: true
+    },
+    {
+      matchManagers: [
+        "github-actions"
+      ],
+      matchUpdateTypes: [
+        "digest",
+        "patch"
+      ],
+      automerge: true,
+      platformAutomerge: true
+    },
+    {
+      matchManagers: [
+        "hermit"
+      ],
+      matchUpdateTypes: [
+        "patch"
+      ],
       automerge: true,
       platformAutomerge: true
     }
