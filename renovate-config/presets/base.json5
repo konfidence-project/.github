@@ -24,6 +24,6 @@
     }
   ],
   hermit: {
-    enabled: true,
+    enabled: true
   }
 }
