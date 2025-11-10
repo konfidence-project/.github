@@ -179,7 +179,7 @@ jobs:
 
       - name: Upload release artifacts
         if: ${{ inputs.release && inputs.release_manifests }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: controller.deployment.yaml
           path: config/release/
@@ -208,7 +208,7 @@ jobs:
 
       - name: Download release artifacts
         if: ${{ inputs.release && inputs.release_manifests }}
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: controller.deployment.yaml
           path: dist
