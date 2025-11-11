@@ -6,7 +6,7 @@ on:
 jobs:
   lint:
     name: Lint Golang
-    runs-on: ubuntu-latest
+    runs-on: konfidence-medium
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
