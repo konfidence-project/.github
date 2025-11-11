@@ -1,6 +1,6 @@
 name: Golang CI Lint
 
-on: 
+on:
   workflow_call:
 
 jobs:
@@ -27,7 +27,6 @@ jobs:
       - name: Set GOPRIVATE
         run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
       
-      - name: Run golang linter
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1.6
+      - name: Run Linter
+        run: |
+          make lint
