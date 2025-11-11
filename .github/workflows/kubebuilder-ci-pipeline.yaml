@@ -55,7 +55,7 @@ jobs:
 
   test:
     name: Test
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v3
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@202-use-linter-provided-by-hermit
     secrets: inherit
     with:
       before-tests: ${{ inputs.before-tests }}
