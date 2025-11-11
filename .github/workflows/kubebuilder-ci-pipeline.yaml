@@ -50,7 +50,7 @@ on:
 jobs:
   lint:
     name: Lint
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v3
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@202-use-linter-provided-by-hermit 
     secrets: inherit
 
   test:
