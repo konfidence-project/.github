@@ -14,11 +14,6 @@ jobs:
       - name: Init Hermit
         uses: cashapp/activate-hermit@v1
 
-      - name: Activate Hermit
-        run: |
-          eval "$(./bin/hermit env --raw)"
-          echo "PATH=$PATH" >> $GITHUB_ENV
-
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
