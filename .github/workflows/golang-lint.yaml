@@ -1,23 +1,18 @@
 name: Golang CI Lint
 
-on: 
+on:
   workflow_call:
 
 jobs:
   lint:
     name: Lint Golang
-    runs-on: ubuntu-latest
+    runs-on: konfidence-large
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Init Hermit
         uses: cashapp/activate-hermit@v1
-
-      - name: Activate Hermit
-        run: |
-          eval "$(./bin/hermit env --raw)"
-          echo "PATH=$PATH" >> $GITHUB_ENV
 
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v3
@@ -27,7 +22,14 @@ jobs:
       - name: Set GOPRIVATE
         run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
       
-      - name: Run golang linter
-        uses: golangci/golangci-lint-action@v8
+      - name: Cache linting step
+        uses: actions/cache@v4
         with:
-          version: v2.1.6
+          path: ~/.cache/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/.golangci.yml', '**/.golangci.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-golangci-lint-
+      
+      - name: Run Linter
+        run: |
+          make lint
