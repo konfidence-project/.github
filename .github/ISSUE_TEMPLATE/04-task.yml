@@ -14,8 +14,6 @@ body:
       label: Description
       description: Detailed description of what needs to be done
       placeholder: Provide a clear explanation of the work that needs to be completed
-    validations:
-      required: true
 
   - type: textarea
     id: acceptance-criteria
@@ -26,5 +24,3 @@ body:
         - [ ] Criteria 1
         - [ ] Criteria 2
         - [ ] Criteria 3
-    validations:
-      required: true
