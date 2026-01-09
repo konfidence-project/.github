@@ -22,6 +22,7 @@ Orchestrates linting, testing, and building for CI scenarios (PRs and non-main b
 - Runs Go linting via `golang-lint.yaml`
 - Runs tests via `kubebuilder-test.yaml`
 - Builds multi-platform container images (no push/release)
+- Provide status check to prevent merging PRs with failing pipeline 
 
 **Usage:**
 ```yaml
@@ -29,8 +30,8 @@ Orchestrates linting, testing, and building for CI scenarios (PRs and non-main b
 name: CI
 on:
   pull_request:
-  push:
-    branches-ignore: [main]
+    branches:
+      - main
 
 jobs:
   ci:
