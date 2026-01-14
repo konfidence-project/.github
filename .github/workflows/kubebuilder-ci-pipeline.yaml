@@ -32,6 +32,11 @@ on:
         required: false
         type: string
         default: ''
+      skip-build:
+        description: skip build job
+        required: false
+        type: boolean
+        default: false
       
       # Test configuration
       before-tests:
@@ -63,6 +68,7 @@ jobs:
   build:
     name: Build Container Image
     needs: [lint, test]
+    if: ${{ !inputs.skip-build }}
     uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v3
     secrets: inherit
     permissions:
@@ -90,5 +96,20 @@ jobs:
       - lint
       - test
       - build
+    if: always()
     steps:
-      - run: echo "All required checks passed"
+      - name: Fail if any job failed or cancelled
+        run: |
+          CI_FAILED=$(echo '${{ toJson(needs) }}' | jq -r '
+          to_entries[]
+          | select(.value.result == "failure" or .value.result == "cancelled")
+          | .key
+          ')
+
+          if [ -n "$CI_FAILED" ]; then
+          echo "Failed jobs:"
+          echo "$CI_FAILED"
+          exit 1
+          fi
+
+          echo "All required jobs passed or were skipped"
