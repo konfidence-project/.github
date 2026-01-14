@@ -75,15 +75,16 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ env.GH_TOKEN }}
 
       - name: Check Semantic Release (dry-run)
         id: semantic-release-dry-run
@@ -125,10 +126,16 @@ jobs:
       attestations: write
       id-token: write
     steps:
+      - name: Setup GitHub Repo Access
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
+        with:
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ env.GH_TOKEN }}
 
       - name: Init Hermit
         uses: cashapp/activate-hermit@v1
@@ -137,11 +144,6 @@ jobs:
         run: |
           eval "$(./bin/hermit env --raw)"
           echo "PATH=$PATH" >> $GITHUB_ENV
-
-      - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
-        with:
-          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -196,15 +198,16 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ env.GH_TOKEN }}
 
       - name: Download release artifacts
         if: ${{ inputs.release && inputs.release_manifests }}

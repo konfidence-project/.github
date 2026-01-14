@@ -19,14 +19,16 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@main
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-            
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          token: ${{ env.GH_TOKEN }}
+
       - name: release new version
         id: semantic-release
         uses: konfidence-project/.github/.github/actions/semantic-release@main

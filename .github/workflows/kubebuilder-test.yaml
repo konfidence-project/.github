@@ -21,13 +21,15 @@ jobs:
     name: Run Tests (${{ inputs.test-cmd }})
     runs-on: konfidence-large
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          token: ${{ env.GH_TOKEN }}
 
       - name: Init Hermit
         uses: cashapp/activate-hermit@v1
