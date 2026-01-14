@@ -32,6 +32,11 @@ on:
         required: false
         type: string
         default: ''
+      skip-build:
+        description: skip build job
+        required: false
+        type: boolean
+        default: false
 
       # Test configuration
       before-tests:
@@ -74,6 +79,7 @@ jobs:
   build-and-release:
     name: Build and Release Container Image
     needs: [lint, test]
+    if: ${{ !inputs.skip-build }}
     uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v3
     secrets: inherit
     permissions:
