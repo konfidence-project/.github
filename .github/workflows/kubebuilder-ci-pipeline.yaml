@@ -82,6 +82,7 @@ jobs:
       bake-file: ${{ inputs.bake-file }}
       targets: ${{ inputs.targets }}
       release_manifests: ${{ inputs.release_manifests }}
+
   ci-gate:
     name: Status check Job for CI
     runs-on: ubuntu-latest

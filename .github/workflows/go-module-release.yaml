@@ -23,15 +23,16 @@ jobs:
       version: ${{ steps.semantic-release.outputs.new-release-version }}
       new-release-published: ${{ steps.semantic-release.outputs.new-release-published }}
     steps:
-      - name: Clone the code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@v3
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Clone the code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ env.GH_TOKEN }}
 
       - name: Set GOPRIVATE
         run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
