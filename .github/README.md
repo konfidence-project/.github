@@ -45,6 +45,7 @@ jobs:
 - `before-tests`: Command to run before tests
 - `image-name`: Container image name (default: `${{ github.repository }}`)
 - `registry` (default: `ghcr.io`): Container registry
+- `skip-build` (default: `false`): skip build job 
 - All inputs from atomic workflows (dockerfile, context, bake-file, etc.)
 
 #### Kubebuilder Release Pipeline ([`kubebuilder-release-pipeline.yaml`](./workflows/kubebuilder-release-pipeline.yaml))
