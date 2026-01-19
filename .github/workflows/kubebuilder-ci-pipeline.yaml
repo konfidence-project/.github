@@ -68,7 +68,6 @@ jobs:
   build:
     name: Build Container Image
     needs: [lint, test]
-    if: ${{ !inputs.skip-build }}
     uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v3
     secrets: inherit
     permissions:
@@ -88,6 +87,7 @@ jobs:
       bake-file: ${{ inputs.bake-file }}
       targets: ${{ inputs.targets }}
       release_manifests: ${{ inputs.release_manifests }}
+      skip-build: ${{ inputs.skip-build }}
 
   ci-gate:
     name: Status check Job for CI
