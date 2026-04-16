@@ -37,14 +37,21 @@ on:
         required: false
         type: boolean
         default: false
-      
+
       # Test configuration
       before-tests:
         description: Command to run before tests
         required: false
         type: string
         default: ''
-      
+
+      # Controller test configuration
+      run-controller-tests:
+        description: Whether to run controller tests (requires Docker on runner)
+        required: false
+        type: boolean
+        default: false
+
       # Release manifest configuration
       release_manifests:
         description: Whether to generate k8s deployment manifests as release assets
@@ -64,6 +71,14 @@ jobs:
     secrets: inherit
     with:
       before-tests: ${{ inputs.before-tests }}
+
+  controller-test:
+    name: Controller Test
+    if: ${{ inputs.run-controller-tests }}
+    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v3
+    secrets: inherit
+    with:
+      test-cmd: test-controller
 
   build:
     name: Build Container Image
@@ -95,6 +110,7 @@ jobs:
     needs:
       - lint
       - test
+      - controller-test
       - build
     if: always()
     steps:
