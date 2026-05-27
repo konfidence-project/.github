@@ -1,4 +1,4 @@
-name: Kubebuilder Container Build and Release
+name: Controller Build and Release
 
 on:
   workflow_call:
@@ -81,7 +81,7 @@ jobs:
       contents: write
     steps:
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v4
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
@@ -93,7 +93,7 @@ jobs:
 
       - name: Check Semantic Release (dry-run)
         id: semantic-release-dry-run
-        uses: konfidence-project/.github/.github/actions/semantic-release@v3
+        uses: konfidence-project/.github/.github/actions/semantic-release@v4
         with:
           dry-run: true
 
@@ -135,7 +135,7 @@ jobs:
         run: echo "Build job started"
 
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v4
         if: ${{ !inputs.skip-build }}
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
@@ -213,7 +213,7 @@ jobs:
       id-token: write
     steps:
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v4
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
@@ -232,4 +232,4 @@ jobs:
 
       - name: Create Semantic Release
         id: semantic-release
-        uses: konfidence-project/.github/.github/actions/semantic-release@v3
+        uses: konfidence-project/.github/.github/actions/semantic-release@v4

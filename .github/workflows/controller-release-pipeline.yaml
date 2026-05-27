@@ -1,4 +1,4 @@
-name: Kubebuilder CI Pipeline
+name: Controller Release Pipeline
 
 on:
   workflow_call:
@@ -44,14 +44,7 @@ on:
         required: false
         type: string
         default: ''
-
-      # Controller test configuration
-      run-controller-tests:
-        description: Whether to run controller tests (requires Docker on runner)
-        required: false
-        type: boolean
-        default: false
-
+      
       # Release manifest configuration
       release_manifests:
         description: Whether to generate k8s deployment manifests as release assets
@@ -59,31 +52,34 @@ on:
         type: boolean
         default: true
 
+    outputs:
+      metadata:
+        description: Build metadata
+        value: ${{ jobs.build-and-release.outputs.metadata }}
+      version:
+        description: Version that was created
+        value: ${{ jobs.build-and-release.outputs.version }}
+      image-tag:
+        description: Full container image tag
+        value: ${{ jobs.build-and-release.outputs.image-tag }}
+
 jobs:
   lint:
     name: Lint
-    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v3
+    uses: konfidence-project/.github/.github/workflows/golang-lint.yaml@v4
     secrets: inherit
 
   test:
     name: Test
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v3
+    uses: konfidence-project/.github/.github/workflows/controller-test.yaml@v4
     secrets: inherit
     with:
       before-tests: ${{ inputs.before-tests }}
 
-  controller-test:
-    name: Controller Test
-    if: ${{ inputs.run-controller-tests }}
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-test.yaml@v3
-    secrets: inherit
-    with:
-      test-cmd: test-controller
-
-  build:
-    name: Build Container Image
+  build-and-release:
+    name: Build and Release Container Image
     needs: [lint, test]
-    uses: konfidence-project/.github/.github/workflows/kubebuilder-build-and-release.yaml@v3
+    uses: konfidence-project/.github/.github/workflows/controller-build-and-release.yaml@v4
     secrets: inherit
     permissions:
       contents: write
@@ -95,39 +91,11 @@ jobs:
     with:
       image-name: ${{ inputs.image-name }}
       registry: ${{ inputs.registry }}
-      push: false  # CI builds don't push
-      release: false  # CI builds don't release
+      push: true  # Release builds push
+      release: true  # Release builds create releases
       dockerfile: ${{ inputs.dockerfile }}
       context: ${{ inputs.context }}
       bake-file: ${{ inputs.bake-file }}
       targets: ${{ inputs.targets }}
       release_manifests: ${{ inputs.release_manifests }}
       skip-build: ${{ inputs.skip-build }}
-
-  ci-gate:
-    name: Status check Job for CI
-    runs-on: ubuntu-latest
-    needs:
-      - lint
-      - test
-      - controller-test
-      - build
-    if: always()
-    steps:
-      - name: Fail if any job failed or cancelled
-        env:
-          NEEDS_JSON: ${{ toJson(needs) }}
-        run: |
-          CI_FAILED=$(echo "$NEEDS_JSON" | jq -r '
-          to_entries[]
-          | select(.value.result == "failure" or .value.result == "cancelled")
-          | .key
-          ')
-
-          if [ -n "$CI_FAILED" ]; then
-          echo "Failed jobs:"
-          echo "$CI_FAILED"
-          exit 1
-          fi
-
-          echo "All required jobs passed or were skipped"
