@@ -9,7 +9,7 @@ jobs:
     runs-on: konfidence-large
     steps:
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v4
         with:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
@@ -25,7 +25,7 @@ jobs:
         run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
       
       - name: Cache linting step
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/golangci-lint
           key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/.golangci.yml', '**/.golangci.yaml') }}

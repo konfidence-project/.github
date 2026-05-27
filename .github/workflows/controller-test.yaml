@@ -1,9 +1,9 @@
-name: Kubebuilder Tests
+name: Controller Tests
 on: 
   workflow_call:
     inputs:
         test-cmd:
-          description: Command to run to test the kubebuilder project
+          description: Command to run to test the controller project
           required: false
           type: string
           default: test
@@ -17,12 +17,12 @@ on:
             type: string
 
 jobs:
-  kubebuilder-test:
+  controller-test:
     name: Run Tests (${{ inputs.test-cmd }})
     runs-on: konfidence-large
     steps:
       - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v3
+        uses: konfidence-project/.github/.github/actions/github-repo-access@v4
         with:
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 

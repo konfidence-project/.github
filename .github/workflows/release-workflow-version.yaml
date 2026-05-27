@@ -1,7 +1,5 @@
-# TODO: UNUSED since version >= v2 and DEPRECATED
-
 on:
-  push: 
+  push:
     branches: ["main"]
 
 permissions:
@@ -32,21 +30,20 @@ jobs:
       - name: release new version
         id: semantic-release
         uses: konfidence-project/.github/.github/actions/semantic-release@main
-            
+
       - name: update major version tag
         if: steps.semantic-release.outputs.new-release-published == 'true'
         run: |
           # Extract major version from the new release version
           NEW_VERSION="${{ steps.semantic-release.outputs.new-release-version }}"
           MAJOR_VERSION=$(echo "$NEW_VERSION" | cut -d. -f1)
-            
+
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-            
+
           # Force update the major version tag
           git tag -f "v$MAJOR_VERSION"
           git push origin "v$MAJOR_VERSION" --force
-            
+
           echo "Updated major version tag v$MAJOR_VERSION to point to version $NEW_VERSION"
-            
