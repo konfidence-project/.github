@@ -18,6 +18,6 @@ To facilitate a nice, friendly, and open environment for all, check out [our cod
 
 ## :books: Learn More
 
-To learn more about Konfidence, visit our official website at https://docs.konfidence.cloud/.
+To learn more about Konfidence, visit our official website at https://konfidence.cloud/.
 
-<!-- TODO: Add EU funding image -->
+<p align="center"><img alt="Bundesministerium für Wirtschaft und Energie (BMWE)-EU funding logo" src="https://apeirora.eu/assets/img/BMWK-EU.png" width="400"/></p>
