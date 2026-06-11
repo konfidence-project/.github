@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload release artifacts
         if: ${{ !inputs.skip-build && inputs.release && inputs.release_manifests }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: controller.deployment.yaml
           path: config/release/
@@ -225,7 +225,7 @@ jobs:
 
       - name: Download release artifacts
         if: ${{ !inputs.skip-build && inputs.release && inputs.release_manifests }}
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: controller.deployment.yaml
           path: dist
