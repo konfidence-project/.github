@@ -1,0 +1,62 @@
+name: Controller Tests
+on: 
+  workflow_call:
+    inputs:
+        test-cmd:
+          description: Command to run to test the controller project
+          required: false
+          type: string
+          default: test
+        before-tests:
+            description: Command to run before tests (e.g., setup commands like make commands)
+            required: false
+            type: string
+        after-tests:
+            description: Command to run after tests (e.g., cleanup commands)
+            required: false
+            type: string
+
+env:
+  # Keep in sync with ENVTEST_K8S_VERSION in konfidence/Makefile
+  ENVTEST_K8S_VERSION: "1.33"
+
+jobs:
+  controller-test:
+    name: ${{ inputs.test-cmd }}
+    runs-on: konfidence-large
+    steps:
+      - name: Prepare sourcecode
+        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4
+        with:
+          client-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Cache Go modules and build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Cache envtest binaries and tools
+        uses: actions/cache@v5
+        with:
+          path: bin/
+          key: ${{ runner.os }}-bin-envtest-${{ env.ENVTEST_K8S_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-bin-envtest-${{ env.ENVTEST_K8S_VERSION }}-
+
+      - name: Run script before tests
+        if: ${{ inputs.before-tests }}
+        run: ${{ inputs.before-tests }}
+
+      - name: Run Tests
+        run: |
+          make ${{ inputs.test-cmd }}
+
+      - name: Run script after tests
+        if: ${{ inputs.after-tests }}
+        run: ${{ inputs.after-tests }}

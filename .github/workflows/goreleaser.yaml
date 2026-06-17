@@ -1,0 +1,49 @@
+name: Build & Publish
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: Runner label for the GoReleaser job
+        required: false
+        type: string
+        default: ubuntu-latest
+      registry:
+        description: Container registry to log in to
+        required: false
+        type: string
+        default: ghcr.io
+      mode:
+        description: 'Build mode: "pr" (compile only), "main" (build + push images tagged with SHA), "release" (full release via goreleaser)'
+        required: true
+        type: string
+      snapshot-tag:
+        description: Tag to use for snapshot builds (e.g. git SHA). Leave empty for release mode.
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  goreleaser:
+    name: Build & Publish
+    runs-on: ${{ inputs.runner }}
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Prepare sourcecode
+        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4
+        with:
+          client-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          fetch-depth: 0
+
+      - name: Build & Publish
+        # TODO(#712): switch to @v5 after merging.
+        uses: konfidence-project/.github/.github/actions/goreleaser@712-release-pipeline
+        with:
+          mode: ${{ inputs.mode }}
+          registry: ${{ inputs.registry }}
+          snapshot-tag: ${{ inputs.snapshot-tag }}
