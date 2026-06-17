@@ -1,0 +1,70 @@
+name: Publish Helm Charts
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: The release version to validate against and publish (e.g. 1.2.3).
+        required: true
+        type: string
+      charts:
+        description: Space-separated list of chart directories to validate, package, and publish (e.g. "charts/star charts/galaxy").
+        required: true
+        type: string
+      registry:
+        description: OCI registry base URL to push charts to (e.g. ghcr.io/konfidence-project).
+        required: false
+        type: string
+        default: ghcr.io/konfidence-project
+
+jobs:
+  publish-helm-charts:
+    name: Publish Helm Charts
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      VERSION: ${{ inputs.version }}
+      REGISTRY: ${{ inputs.registry }}
+    steps:
+      - name: Prepare sourcecode
+        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Activate Hermit
+        run: |
+          eval "$(./bin/hermit env --raw)"
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+
+      - name: Log in to Helm Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Validate Helm chart versions
+        run: |
+          for CHART in ${{ inputs.charts }}; do
+            CHART_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
+            APP_VERSION=$(yq -r '.appVersion' "${CHART}/Chart.yaml" | tr -d '"')
+
+            if [ "${CHART_VERSION}" != "${VERSION}" ]; then
+              echo "${CHART}/Chart.yaml version ${CHART_VERSION} does not match release ${VERSION}"
+              exit 1
+            fi
+
+            if [ "${APP_VERSION}" != "${VERSION}" ]; then
+              echo "${CHART}/Chart.yaml appVersion ${APP_VERSION} does not match release ${VERSION}"
+              exit 1
+            fi
+          done
+
+      - name: Package and publish Helm charts
+        run: |
+          mkdir -p dist
+          for CHART in ${{ inputs.charts }}; do
+            helm package "${CHART}" --destination dist
+          done
+
+          for CHART_PACKAGE in dist/*.tgz; do
+            helm push "${CHART_PACKAGE}" "oci://${REGISTRY}/charts"
+          done

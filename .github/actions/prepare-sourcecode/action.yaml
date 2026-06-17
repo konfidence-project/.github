@@ -1,0 +1,40 @@
+name: Prepare Sourcecode
+description: Authenticates, checks out sourcecode, initializes Hermit, and configures private Go module access.
+
+inputs:
+  client-id:
+    required: true
+    description: Id of GitHub App used for token generation
+  private-key:
+    required: true
+    description: Private key for GitHub App
+  fetch-depth:
+    required: false
+    description: Number of commits to fetch. Use 0 for full history.
+    default: '1'
+  goprivate:
+    required: false
+    description: GOPRIVATE value for private Go modules
+    default: github.com/konfidence-project
+
+runs:
+  using: composite
+  steps:
+    - name: Setup GitHub Repo Access
+      uses: konfidence-project/.github/.github/actions/github-repo-access@v4
+      with:
+        client-id: ${{ inputs.client-id }}
+        private-key: ${{ inputs.private-key }}
+
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        token: ${{ env.GH_TOKEN }}
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: Init Hermit
+      uses: cashapp/activate-hermit@v1
+
+    - name: Set GOPRIVATE
+      shell: bash
+      run: echo "GOPRIVATE=${{ inputs.goprivate }}" >> "$GITHUB_ENV"

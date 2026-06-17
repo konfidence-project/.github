@@ -1,0 +1,57 @@
+name: Validate Release Tag
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: Validated SemVer version string (e.g. 1.2.3)
+        value: ${{ jobs.version.outputs.version }}
+      git_commit:
+        description: The commit SHA that the release tag points to.
+        value: ${{ jobs.version.outputs.git_commit }}
+      previous_tag:
+        description: The previous semver tag before this release, or empty if none exists.
+        value: ${{ jobs.version.outputs.previous_tag }}
+
+jobs:
+  version:
+    name: Validate Release Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      git_commit: ${{ steps.version.outputs.git_commit }}
+      previous_tag: ${{ steps.previous-tag.outputs.previous_tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate SemVer tag
+        id: version
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ ! "${TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag '${TAG}' is not a valid SemVer tag. Use X.Y.Z."
+            exit 1
+          fi
+
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "git_commit=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag points to main history
+        shell: bash
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
+            echo "Release tag must point to a commit contained in main or 712-release-pipeline."
+            exit 1
+          fi
+
+      - name: Determine previous tag
+        id: previous-tag
+        shell: bash
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
+          echo "previous_tag=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"

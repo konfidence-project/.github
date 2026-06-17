@@ -8,30 +8,28 @@ jobs:
     name: Lint Golang
     runs-on: konfidence-large
     steps:
-      - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@v4
+      - name: Prepare sourcecode
+        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4
         with:
+          client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          token: ${{ env.GH_TOKEN }}
-
-      - name: Init Hermit
-        uses: cashapp/activate-hermit@v1
-
-      - name: Set GOPRIVATE
-        run: echo "GOPRIVATE=github.com/konfidence-project" >> $GITHUB_ENV
-      
+       
       - name: Cache linting step
         uses: actions/cache@v5
         with:
-          path: ~/.cache/golangci-lint
-          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/.golangci.yml', '**/.golangci.yaml') }}
+          path: |
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/.golangci.yml', '**/.golangci.yaml', '**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-golangci-lint-
       
       - name: Run Linter
         run: |
           make lint
+
+      - name: Check formatting and codegen
+        run: |
+          make fmt vet manifests generate
+          git diff --exit-code || { echo "Uncommitted changes detected after fmt/vet/manifests/generate. Run 'make fmt vet manifests generate' locally and commit the results."; exit 1; }

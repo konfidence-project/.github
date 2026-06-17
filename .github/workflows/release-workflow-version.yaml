@@ -20,6 +20,7 @@ jobs:
       - name: Setup GitHub Repo Access
         uses: konfidence-project/.github/.github/actions/github-repo-access@main
         with:
+          client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       - name: Checkout code
