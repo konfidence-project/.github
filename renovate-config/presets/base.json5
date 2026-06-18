@@ -16,26 +16,50 @@
   rangeStrategy: "bump",
   packageRules: [
     {
-      // auto-merge only safe updates
+      groupName: "go toolchain",
+      matchManagers: [
+        "gomod",
+        "hermit"
+      ],
+      matchPackageNames: [
+        "go"
+      ],
       matchUpdateTypes: [
-        "patch",
-        "digest"
+        "minor",
+        "patch"
       ],
       automerge: true,
-      // let Renovate auto-merge
       automergeType: "pr",
-      // merge the PR (safer than branch)
-      platformAutomerge: true,
-      // let GitHub do the merge once checks pass
+      platformAutomerge: true
+    },
+    {
+      groupName: "golangci-lint",
+      matchManagers: [
+        "github-actions",
+        "hermit"
+      ],
+      matchPackageNames: [
+        "golangci-lint"
+      ],
+      matchUpdateTypes: [
+        "minor",
+        "patch"
+      ],
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true
     },
     {
       matchManagers: [
         "gomod"
       ],
       matchUpdateTypes: [
+        "minor",
         "patch"
       ],
+      matchCurrentVersion: "!/^0/",
       automerge: true,
+      automergeType: "pr",
       platformAutomerge: true
     },
     {
@@ -44,9 +68,11 @@
       ],
       matchUpdateTypes: [
         "digest",
+        "minor",
         "patch"
       ],
       automerge: true,
+      automergeType: "pr",
       platformAutomerge: true
     },
     {
@@ -54,9 +80,52 @@
         "hermit"
       ],
       matchUpdateTypes: [
+        "minor",
         "patch"
       ],
       automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true
+    },
+    {
+      matchManagers: [
+        "npm"
+      ],
+      matchDepTypes: [
+        "devDependencies"
+      ],
+      matchUpdateTypes: [
+        "minor",
+        "patch"
+      ],
+      matchCurrentVersion: "!/^0/",
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true
+    },
+    {
+      matchManagers: [
+        "terraform"
+      ],
+      matchUpdateTypes: [
+        "patch"
+      ],
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true
+    },
+    {
+      matchManagers: [
+        "dockerfile",
+        "docker-compose",
+        "kubernetes",
+        "flux"
+      ],
+      matchUpdateTypes: [
+        "digest"
+      ],
+      automerge: true,
+      automergeType: "pr",
       platformAutomerge: true
     }
   ],
