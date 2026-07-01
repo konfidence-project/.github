@@ -171,7 +171,7 @@ jobs:
 
       - name: Build and Push with bake
         id: docker-build
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         if: ${{ !inputs.skip-build }}
         with:
           source: ${{ inputs.context }}
