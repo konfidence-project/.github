@@ -41,8 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build & Publish
-        # TODO(#712): switch to @v5 after merging.
-        uses: konfidence-project/.github/.github/actions/goreleaser@712-release-pipeline
+        uses: konfidence-project/.github/.github/actions/goreleaser@v4
         with:
           mode: ${{ inputs.mode }}
           registry: ${{ inputs.registry }}
