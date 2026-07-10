@@ -1,0 +1,32 @@
+name: CI Gate
+
+on:
+  workflow_call:
+    inputs:
+      needs-json:
+        description: 'Serialized needs context from the caller (toJson(needs))'
+        required: true
+        type: string
+
+jobs:
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any job failed or cancelled
+        env:
+          NEEDS_JSON: ${{ inputs.needs-json }}
+        run: |
+          CI_FAILED=$(echo "$NEEDS_JSON" | jq -r '
+          to_entries[]
+          | select(.value.result == "failure" or .value.result == "cancelled")
+          | .key
+          ')
+
+          if [ -n "$CI_FAILED" ]; then
+            echo "Failed jobs:"
+            echo "$CI_FAILED"
+            exit 1
+          fi
+
+          echo "All required jobs passed or were skipped"
