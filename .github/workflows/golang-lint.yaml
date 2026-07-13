@@ -2,6 +2,12 @@ name: Golang CI Lint
 
 on:
   workflow_call:
+    inputs:
+      codegen-cmd:
+        description: 'Make targets to run for formatting and codegen drift check (e.g. "fmt vet manifests generate")'
+        required: false
+        type: string
+        default: 'fmt vet manifests generate'
 
 jobs:
   lint:
@@ -31,5 +37,5 @@ jobs:
 
       - name: Check formatting and codegen
         run: |
-          make fmt vet manifests generate
-          git diff --exit-code || { echo "Uncommitted changes detected after fmt/vet/manifests/generate. Run 'make fmt vet manifests generate' locally and commit the results."; exit 1; }
+          make ${{ inputs.codegen-cmd }}
+          git diff --exit-code || { echo "Uncommitted changes detected after ${{ inputs.codegen-cmd }}. Run 'make ${{ inputs.codegen-cmd }}' locally and commit the results."; exit 1; }
