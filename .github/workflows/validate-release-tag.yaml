@@ -9,9 +9,6 @@ on:
       git_commit:
         description: The commit SHA that the release tag points to.
         value: ${{ jobs.version.outputs.git_commit }}
-      previous_tag:
-        description: The previous semver tag before this release, or empty if none exists.
-        value: ${{ jobs.version.outputs.previous_tag }}
 
 jobs:
   version:
@@ -20,7 +17,6 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       git_commit: ${{ steps.version.outputs.git_commit }}
-      previous_tag: ${{ steps.previous-tag.outputs.previous_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -45,13 +41,6 @@ jobs:
         run: |
           git fetch origin main
           if ! git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
-            echo "Release tag must point to a commit contained in main or 712-release-pipeline."
+            echo "Release tag must point to a commit contained in main"
             exit 1
           fi
-
-      - name: Determine previous tag
-        id: previous-tag
-        shell: bash
-        run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
-          echo "previous_tag=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
