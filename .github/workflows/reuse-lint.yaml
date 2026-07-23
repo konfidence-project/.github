@@ -1,0 +1,15 @@
+name: REUSE Lint
+
+on:
+  workflow_call: {}
+
+jobs:
+  reuse-lint:
+    name: REUSE Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: REUSE compliance check
+        uses: fsfe/reuse-action@v5
