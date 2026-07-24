@@ -1,0 +1,41 @@
+name: Dependabot Automerge
+
+# Reusable automerge for Dependabot PRs (ADR-0027). Minor and patch updates
+# are queued for auto-merge with the konfidence-bot app token; majors wait
+# for a human. Merge happens only after required status checks pass.
+#
+# Callers must trigger on pull_request_target (Dependabot-triggered
+# pull_request runs cannot read Actions secrets) and pass `secrets: inherit`.
+# No code is checked out here, so the target's elevated context is safe.
+
+on:
+  workflow_call:
+  pull_request_target:
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch update metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Mint app token
+        id: app-token
+        if: >-
+          contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'),
+          steps.metadata.outputs.update-type)
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - name: Enable auto-merge
+        if: steps.app-token.outputs.token != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --rebase "$PR_URL"

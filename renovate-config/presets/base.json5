@@ -1,5 +1,9 @@
 {
   // This file is in JSON5 format: https://json5.org
+  //
+  // Renovate only covers what Dependabot cannot: hermit-managed tools and
+  // Helm charts/values. All code ecosystems (gomod, npm, pip, bundler,
+  // gradle, docker, github-actions) are updated by Dependabot — see ADR-0027.
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
     "config:recommended",
@@ -14,11 +18,15 @@
     "vendir/"
   ],
   rangeStrategy: "bump",
+  enabledManagers: [
+    "hermit",
+    "helmv3",
+    "helm-values"
+  ],
   packageRules: [
     {
       groupName: "go toolchain",
       matchManagers: [
-        "gomod",
         "hermit"
       ],
       matchPackageNames: [
@@ -33,96 +41,12 @@
       platformAutomerge: true
     },
     {
-      groupName: "golangci-lint",
-      matchManagers: [
-        "github-actions",
-        "hermit"
-      ],
-      matchPackageNames: [
-        "golangci-lint"
-      ],
-      matchUpdateTypes: [
-        "minor",
-        "patch"
-      ],
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true
-    },
-    {
-      matchManagers: [
-        "gomod"
-      ],
-      matchUpdateTypes: [
-        "minor",
-        "patch"
-      ],
-      matchCurrentVersion: "!/^0/",
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true
-    },
-    {
-      matchManagers: [
-        "github-actions"
-      ],
-      matchUpdateTypes: [
-        "digest",
-        "minor",
-        "patch"
-      ],
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true
-    },
-    {
       matchManagers: [
         "hermit"
       ],
       matchUpdateTypes: [
         "minor",
         "patch"
-      ],
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true
-    },
-    {
-      matchManagers: [
-        "npm"
-      ],
-      matchDepTypes: [
-        "devDependencies"
-      ],
-      matchUpdateTypes: [
-        "minor",
-        "patch"
-      ],
-      matchCurrentVersion: "!/^0/",
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true
-    },
-    {
-      matchManagers: [
-        "terraform"
-      ],
-      matchUpdateTypes: [
-        "patch"
-      ],
-      automerge: true,
-      automergeType: "pr",
-      platformAutomerge: true
-    },
-    {
-      matchManagers: [
-        "dockerfile",
-        "docker-compose",
-        "kubernetes",
-        "flux"
-      ],
-      matchUpdateTypes: [
-        "digest"
       ],
       automerge: true,
       automergeType: "pr",
