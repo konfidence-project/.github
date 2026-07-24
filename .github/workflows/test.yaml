@@ -41,10 +41,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      # Only the binaries setup-envtest and go install drop into bin/ — never
+      # bin/ wholesale: that resurrects stale hermit pins from old caches
+      # (a restored .go-<old>.pkg overrides the checked-out toolchain pin).
       - name: Cache envtest binaries and tools
         uses: actions/cache@v6
         with:
-          path: bin/
+          path: |
+            bin/k8s/
+            bin/ginkgo
           key: ${{ runner.os }}-bin-envtest-${{ env.ENVTEST_K8S_VERSION }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-bin-envtest-${{ env.ENVTEST_K8S_VERSION }}-
