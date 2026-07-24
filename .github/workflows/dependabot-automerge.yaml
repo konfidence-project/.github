@@ -16,6 +16,9 @@ jobs:
   automerge:
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Fetch update metadata
         id: metadata
