@@ -31,7 +31,7 @@ jobs:
         if: >-
           contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'),
           steps.metadata.outputs.update-type)
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
