@@ -30,7 +30,7 @@ jobs:
       - name: Prepare sourcecode
         uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4
         with:
-          app-id: ${{ vars.GH_APP_ID }}
+          client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       - name: Activate Hermit
