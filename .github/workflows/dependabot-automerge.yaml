@@ -1,6 +1,6 @@
 name: Dependabot Automerge
 
-# Reusable automerge for Dependabot PRs (ADR-0027). Minor and patch updates
+# Reusable automerge for Dependabot PRs (ADR-0033). Minor and patch updates
 # are queued for auto-merge with the konfidence-bot app token; majors wait
 # for a human. Merge happens only after required status checks pass.
 #

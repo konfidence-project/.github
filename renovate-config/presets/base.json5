@@ -3,7 +3,7 @@
   //
   // Renovate only covers what Dependabot cannot: hermit-managed tools and
   // Helm charts/values. All code ecosystems (gomod, npm, pip, bundler,
-  // gradle, docker, github-actions) are updated by Dependabot — see ADR-0027.
+  // gradle, docker, github-actions) are updated by Dependabot — see ADR-0033.
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
     "config:recommended",
