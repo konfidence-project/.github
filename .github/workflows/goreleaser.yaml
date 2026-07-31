@@ -34,14 +34,14 @@ jobs:
       id-token: write
     steps:
       - name: Prepare sourcecode
-        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4
+        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4.3.0
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
           fetch-depth: 0
 
       - name: Build & Publish
-        uses: konfidence-project/.github/.github/actions/goreleaser@v4
+        uses: konfidence-project/.github/.github/actions/goreleaser@v4.3.0
         with:
           mode: ${{ inputs.mode }}
           registry: ${{ inputs.registry }}
