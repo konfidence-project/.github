@@ -1,6 +1,6 @@
 # Welcome to Project Konfidence on GitHub
 
-<img src="https://github.com/konfidence-project/konfidence-project/blob/main/docs/pages/guides/logo/Icon_only/SVG/128_IconOnly_color.svg" alt="Konfidence logo" width="200" />
+<img src="../docs/assets/images/200_lightBackground_color.png" alt="Konfidence logo" width="400" />
 
 :wave: Welcome to the official GitHub organization of Project Konfidence, a comprehensive software delivery framework for microservice-based SaaS applications.
 
