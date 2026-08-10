@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build & Publish
-        uses: konfidence-project/.github/.github/actions/goreleaser@v4.3.2
+        uses: konfidence-project/.github/.github/actions/goreleaser@v4.4.2
         with:
           mode: ${{ inputs.mode }}
           registry: ${{ inputs.registry }}

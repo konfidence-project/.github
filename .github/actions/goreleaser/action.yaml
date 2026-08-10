@@ -33,7 +33,7 @@ runs:
             echo "push-images=true"                              >> "$GITHUB_OUTPUT"
             ;;
           release)
-            echo "args=release --clean"                          >> "$GITHUB_OUTPUT"
+            echo "args=release --clean --skip=changelog"         >> "$GITHUB_OUTPUT"
             echo "login-registry=true"                           >> "$GITHUB_OUTPUT"
             echo "push-images=false"                             >> "$GITHUB_OUTPUT"
             ;;
