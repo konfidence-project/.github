@@ -61,7 +61,7 @@ runs:
         version: '~> v2'
         args: ${{ steps.cfg.outputs.args }}
       env:
-        GITHUB_TOKEN: ${{ env.GH_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
         GORELEASER_CURRENT_TAG: ${{ inputs.snapshot-tag }}
 
     - name: Push Docker images
