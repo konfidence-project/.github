@@ -25,11 +25,11 @@ jobs:
     name: ${{ inputs.test-cmd }}
     runs-on: konfidence-large
     steps:
-      - name: Prepare sourcecode
-        uses: konfidence-project/.github/.github/actions/prepare-sourcecode@v4.3.2
-        with:
-          client-id: ${{ vars.GH_APP_ID }}
-          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Init Hermit
+        uses: cashapp/activate-hermit@v1
 
       - name: Cache Go modules and build cache
         uses: actions/cache@v6
