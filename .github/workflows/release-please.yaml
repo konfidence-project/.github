@@ -25,7 +25,7 @@ jobs:
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
       - id: release-please
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           token: ${{ env.GH_TOKEN }}
           config-file: .github/release-please/release-please-config.json
