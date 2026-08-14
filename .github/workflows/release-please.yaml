@@ -1,6 +1,13 @@
 name: Release PR
 on:
   workflow_call:
+    outputs:
+      release_created:
+        description: '"true" when the merged release PR produced a tag and draft release'
+        value: ${{ jobs.release-please.outputs.release_created }}
+      tag_name:
+        description: Tag of the created release (e.g. 1.2.3)
+        value: ${{ jobs.release-please.outputs.tag_name }}
 
 jobs:
   release-please:
@@ -8,13 +15,17 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      release_created: ${{ steps.release-please.outputs.release_created }}
+      tag_name: ${{ steps.release-please.outputs.tag_name }}
     steps:
       - uses: konfidence-project/.github/.github/actions/github-repo-access@v4
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
-      - uses: googleapis/release-please-action@v4
+      - id: release-please
+        uses: googleapis/release-please-action@v4
         with:
           token: ${{ env.GH_TOKEN }}
           config-file: .github/release-please/release-please-config.json
