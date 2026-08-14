@@ -1,5 +1,5 @@
-name: GitHub Repo Access
-description: Sets up GitHub CLI authentication for private repositories inside this org (konfidence-project)
+name: GitHub App Authentication
+description: Authenticates GitHub CLI and Git using a short-lived GitHub App installation token
 
 inputs:
   client-id:
@@ -8,6 +8,9 @@ inputs:
   private-key:
     required: true
     description: Private key for konfidence-project GitHub App
+  repositories:
+    required: false
+    description: Comma-separated repositories the token may access; defaults to the current repository
 
 runs:
   using: composite
@@ -19,13 +22,14 @@ runs:
         client-id: ${{ inputs.client-id }}
         private-key: ${{ inputs.private-key }}
         owner: ${{ github.repository_owner }}
+        repositories: ${{ inputs.repositories || github.event.repository.name }}
 
     - name: Persist GitHub App Token for Job
       shell: bash
       run: |
         echo "GH_TOKEN=${{ steps.generate-token.outputs.token }}" >> $GITHUB_ENV
 
-    - name: Setup GitHub CLI authentication
+    - name: Configure GitHub CLI and Git
       shell: bash
       run: |
         # Configure GitHub CLI authentication
