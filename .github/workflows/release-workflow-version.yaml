@@ -17,8 +17,8 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - name: Setup GitHub Repo Access
-        uses: konfidence-project/.github/.github/actions/github-repo-access@main
+      - name: Authenticate as Konfidence GitHub App
+        uses: konfidence-project/.github/.github/actions/github-app-auth@main
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
