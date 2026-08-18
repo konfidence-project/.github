@@ -18,8 +18,13 @@
       "section": "Performance Improvements"
     },
     {
+      "type": "revert",
+      "section": "Reverts"
+    },
+    {
       "type": "chore",
-      "section": "Maintenance"
+      "section": "Maintenance",
+      "hidden": true
     },
     {
       "type": "docs",
