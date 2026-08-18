@@ -6,8 +6,11 @@ updates:
       - "/.github/actions/*"
     schedule:
       interval: weekly
+    # fix instead of chore: release-please only bumps on feat/fix/perf, and
+    # dependency updates to the pinned internal actions must keep producing
+    # patch releases (semantic-release had an explicit chore(deps) -> patch rule)
     commit-message:
-      prefix: chore
+      prefix: fix
       include: scope
     groups:
       actions-minor-patch:
