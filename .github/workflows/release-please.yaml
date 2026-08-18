@@ -19,7 +19,10 @@ jobs:
       release_created: ${{ steps.release-please.outputs.release_created }}
       tag_name: ${{ steps.release-please.outputs.tag_name }}
     steps:
-      - uses: konfidence-project/.github/.github/actions/github-app-auth@v4
+      # pinned to a SHA, not the moving @v4: this workflow produces v4, so it
+      # must not depend on it — a broken v4 would take down the pipeline
+      # needed to fix v4
+      - uses: konfidence-project/.github/.github/actions/github-app-auth@6e6fceb7157f77584cc55e967e0a765ef8c65736 # v4.5.0
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
