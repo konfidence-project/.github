@@ -1,0 +1,52 @@
+name: Release PR
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release PR
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/release-please.yaml
+    secrets: inherit
+
+  # Runs only on the push that merges a release PR. Retags the moving major
+  # version tag first, then removes the draft flag — consumers pinning @vN
+  # never see a published release the major tag doesn't cover yet.
+  publish-release:
+    name: Publish Release
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.release-please.outputs.tag_name }}
+    steps:
+      - uses: konfidence-project/.github/.github/actions/github-app-auth@v4
+        with:
+          client-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ env.GH_TOKEN }}
+
+      - name: Update major version tag
+        run: |
+          MAJOR="${TAG%%.*}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f "${MAJOR}"
+          git push --force origin "${MAJOR}"
+
+      - name: Undraft release
+        run: gh release edit "${TAG}" --repo "${GITHUB_REPOSITORY}" --draft=false
