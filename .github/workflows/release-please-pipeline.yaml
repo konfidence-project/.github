@@ -21,6 +21,11 @@ jobs:
   # Runs only on the push that merges a release PR. Retags the moving major
   # version tag first, then removes the draft flag — consumers pinning @vN
   # never see a published release the major tag doesn't cover yet.
+  #
+  # Recovery after a failure here: use "re-run failed jobs", NOT "re-run all
+  # jobs" — a full re-run makes release-please report nothing (the release PR
+  # is already tagged), release_created stays empty, and this job silently
+  # skips while the release stays draft.
   publish-release:
     name: Publish Release
     needs: [release-please]
@@ -30,21 +35,17 @@ jobs:
       contents: write
     env:
       TAG: ${{ needs.release-please.outputs.tag_name }}
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: konfidence-project/.github/.github/actions/github-app-auth@v4
-        with:
-          client-id: ${{ vars.GH_APP_ID }}
-          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-
+      # checkout the release tag, not github.sha — if this run replaced one
+      # that was cancelled while queued, github.sha is newer than the release
       - uses: actions/checkout@v7
         with:
-          token: ${{ env.GH_TOKEN }}
+          ref: refs/tags/${{ needs.release-please.outputs.tag_name }}
 
       - name: Update major version tag
         run: |
           MAJOR="${TAG%%.*}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -f "${MAJOR}"
           git push --force origin "${MAJOR}"
 
