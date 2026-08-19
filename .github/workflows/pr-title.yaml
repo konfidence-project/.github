@@ -1,0 +1,39 @@
+name: Validate PR Title
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-title:
+    name: PR title convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow tooling
+        uses: actions/checkout@v7
+        with:
+          repository: konfidence-project/.github
+          ref: main
+          path: workflow-tooling
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        working-directory: workflow-tooling
+        run: |
+          printf '%s\n' "$PR_TITLE" > "$RUNNER_TEMP/pr-title"
+          source ./bin/activate-hermit
+          if ! prek run conventional-pre-commit \
+              --stage commit-msg \
+              --commit-msg-filename "$RUNNER_TEMP/pr-title" >/dev/null 2>&1; then
+            echo "::error title=Invalid PR title::The PR title must follow Conventional Commits format."
+            printf 'PR title validation failed.\n\n'
+            printf 'Rejected title: %s\n\n' "$PR_TITLE"
+            printf 'Use a title that follows conventional commits pattern such as:\n'
+            printf '  feat: add deployment history\n'
+            printf '  fix(api): handle missing project\n\n'
+            printf 'See https://www.conventionalcommits.org/ for the required format.\n'
+            exit 1
+          fi
