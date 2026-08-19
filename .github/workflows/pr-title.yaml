@@ -1,7 +1,14 @@
 name: Validate PR Title
 
+# GitHub uses the PR title as the default commit message for squash merges.
+# This check validates it early to guard the Conventional Commits constraint.
+# We are aware that this can give no final guarantee, because changing the
+# commit message is still possible on squash merges.
 on:
   workflow_call:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
 
 permissions:
   contents: read
