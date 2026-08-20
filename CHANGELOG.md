@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.0](https://github.com/konfidence-project/.github/compare/v4.6.0...v4.7.0) (2026-08-20)
+
+
+### Features
+
+* add PR title check ([6be681b](https://github.com/konfidence-project/.github/commit/6be681b557543c2e81d8cd0c16acbd21c95b5ac7))
+
 ## [4.6.0](https://github.com/konfidence-project/.github/compare/v4.5.1...v4.6.0) (2026-08-18)
 
 
