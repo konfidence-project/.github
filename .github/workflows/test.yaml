@@ -41,13 +41,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Cache envtest binaries and tools
+      - name: Cache envtest binaries
         uses: actions/cache@v6
         with:
-          path: bin/
-          key: ${{ runner.os }}-bin-envtest-${{ env.ENVTEST_K8S_VERSION }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-bin-envtest-${{ env.ENVTEST_K8S_VERSION }}-
+          path: bin/k8s/
+          key: ${{ runner.os }}-envtest-${{ env.ENVTEST_K8S_VERSION }}
 
       - name: Run script before tests
         if: ${{ inputs.before-tests }}
