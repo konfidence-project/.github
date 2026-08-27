@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.1](https://github.com/konfidence-project/.github/compare/v4.7.0...v4.7.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **ci:** only cache envtest binaries instead of whole bin folder for controller tests ([844ac71](https://github.com/konfidence-project/.github/commit/844ac71d90153cdefe33c249d23f1e7812648262))
+
 ## [4.7.0](https://github.com/konfidence-project/.github/compare/v4.6.0...v4.7.0) (2026-08-20)
 
 
