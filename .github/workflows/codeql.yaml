@@ -1,0 +1,43 @@
+name: CodeQL Analysis
+
+on:
+  workflow_call:
+    inputs:
+      languages:
+        description: JSON array of CodeQL languages to analyze
+        required: false
+        type: string
+        default: '["actions", "go", "javascript-typescript"]'
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(inputs.languages) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Init Hermit for Go
+        if: matrix.language == 'go'
+        uses: cashapp/activate-hermit@v1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.language == 'go' && 'autobuild' || 'none' }}
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
