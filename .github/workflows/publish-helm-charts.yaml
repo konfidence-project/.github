@@ -3,9 +3,14 @@ name: Publish Helm Charts
 on:
   workflow_call:
     inputs:
+      mode:
+        description: 'Publishing mode: "release" validates chart versions; "dev" packages charts with the caller commit as appVersion.'
+        required: false
+        type: string
+        default: release
       version:
-        description: The release version to validate against and publish (e.g. 1.2.3).
-        required: true
+        description: Required in release mode; the release version to validate against and publish (e.g. 1.2.3).
+        required: false
         type: string
       charts:
         description: Space-separated list of chart directories to validate, package, and publish (e.g. "charts/star charts/galaxy").
@@ -25,6 +30,7 @@ jobs:
       contents: read
       packages: write
     env:
+      MODE: ${{ inputs.mode }}
       VERSION: ${{ inputs.version }}
       REGISTRY: ${{ inputs.registry }}
     steps:
@@ -37,7 +43,21 @@ jobs:
       - name: Log in to Helm Registry
         run: echo "${{ github.token }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
 
+      - name: Validate publishing mode
+        run: |
+          case "$MODE" in
+            release)
+              if [ -z "$VERSION" ]; then
+                echo "version is required in release mode"
+                exit 1
+              fi
+              ;;
+            dev) ;;
+            *) echo "Unsupported publishing mode: $MODE"; exit 1 ;;
+          esac
+
       - name: Validate Helm chart versions
+        if: inputs.mode == 'release'
         run: |
           for CHART in ${{ inputs.charts }}; do
             CHART_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
@@ -58,7 +78,16 @@ jobs:
         run: |
           mkdir -p dist
           for CHART in ${{ inputs.charts }}; do
-            helm package "${CHART}" --destination dist
+            if [ "$MODE" = dev ]; then
+              RELEASE_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
+              BASE_VERSION="${RELEASE_VERSION%%[-+]*}"
+              # Caller run numbers order builds; retries cannot overtake a newer run.
+              CHART_VERSION="${BASE_VERSION}-dev.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+              helm package "$CHART" --destination dist \
+                --version "$CHART_VERSION" --app-version "$GITHUB_SHA"
+            else
+              helm package "$CHART" --destination dist
+            fi
           done
 
           for CHART_PACKAGE in dist/*.tgz; do
