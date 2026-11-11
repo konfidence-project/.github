@@ -31,7 +31,6 @@ jobs:
       packages: write
     env:
       MODE: ${{ inputs.mode }}
-      CHARTS: ${{ inputs.charts }}
       VERSION: ${{ inputs.version }}
       REGISTRY: ${{ inputs.registry }}
     steps:
@@ -40,6 +39,9 @@ jobs:
 
       - name: Init Hermit
         uses: cashapp/activate-hermit@v1
+
+      - name: Log in to Helm Registry
+        run: echo "${{ github.token }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Validate publishing mode
         run: |
@@ -53,16 +55,11 @@ jobs:
             dev) ;;
             *) echo "Unsupported publishing mode: $MODE"; exit 1 ;;
           esac
-          if [ -z "$CHARTS" ]; then
-            echo "charts must not be empty"
-            exit 1
-          fi
 
       - name: Validate Helm chart versions
         if: inputs.mode == 'release'
         run: |
-          read -r -a CHART_PATHS <<< "$CHARTS"
-          for CHART in "${CHART_PATHS[@]}"; do
+          for CHART in ${{ inputs.charts }}; do
             CHART_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
             APP_VERSION=$(yq -r '.appVersion' "${CHART}/Chart.yaml" | tr -d '"')
 
@@ -77,17 +74,15 @@ jobs:
             fi
           done
 
-      - name: Package Helm charts
+      - name: Package and publish Helm charts
         run: |
           mkdir -p dist
-          read -r -a CHART_PATHS <<< "$CHARTS"
-          for CHART in "${CHART_PATHS[@]}"; do
+          for CHART in ${{ inputs.charts }}; do
             if [ "$MODE" = dev ]; then
               RELEASE_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
               BASE_VERSION="${RELEASE_VERSION%%[-+]*}"
               # Caller run numbers order builds; retries cannot overtake a newer run.
               CHART_VERSION="${BASE_VERSION}-dev.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
-              helm lint "$CHART"
               helm package "$CHART" --destination dist \
                 --version "$CHART_VERSION" --app-version "$GITHUB_SHA"
             else
@@ -95,13 +90,6 @@ jobs:
             fi
           done
 
-      - name: Log in to Helm Registry
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: echo "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-
-      - name: Publish Helm charts
-        run: |
           for CHART_PACKAGE in dist/*.tgz; do
             helm push "${CHART_PACKAGE}" "oci://${REGISTRY}/charts"
           done
