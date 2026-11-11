@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.8.0](https://github.com/konfidence-project/.github/compare/v4.7.1...v4.8.0) (2026-11-11)
+
+
+### Features
+
+* support dev Helm chart publishing ([#115](https://github.com/konfidence-project/.github/issues/115)) ([f3995c1](https://github.com/konfidence-project/.github/commit/f3995c16ab5f84dcb0aaf033c5363117de6ced82))
+
 ## [4.7.1](https://github.com/konfidence-project/.github/compare/v4.7.0...v4.7.1) (2026-08-27)
 
 
