@@ -14,7 +14,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
-      - uses: konfidence-project/.github/.github/actions/goreleaser@4d42404fca8862353c7fa2d457142d82b10a0930 # hardened actions
+      - uses: konfidence-project/.github/.github/actions/goreleaser@7ce51f5807984870589cf6221e7d331244a684ca # hardened actions, no shared binary cache
         with:
           mode: pr
           snapshot-tag: ${{ github.sha }}
