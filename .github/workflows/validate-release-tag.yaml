@@ -10,6 +10,9 @@ on:
         description: The commit SHA that the release tag points to.
         value: ${{ jobs.version.outputs.git_commit }}
 
+permissions:
+  contents: read
+
 jobs:
   version:
     name: Validate Release Tag
@@ -19,28 +22,29 @@ jobs:
       git_commit: ${{ steps.version.outputs.git_commit }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Validate SemVer tag
         id: version
         shell: bash
         run: |
-          TAG="${{ github.ref_name }}"
+          TAG="$GITHUB_REF_NAME"
           if [[ ! "${TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
             echo "Release tag '${TAG}' is not a valid SemVer tag. Use X.Y.Z."
             exit 1
           fi
 
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
-          echo "git_commit=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "git_commit=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Verify tag points to main history
         shell: bash
         run: |
           git fetch origin main
-          if ! git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "Release tag must point to a commit contained in main"
             exit 1
           fi

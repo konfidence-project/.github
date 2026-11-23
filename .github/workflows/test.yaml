@@ -1,60 +1,48 @@
 name: Controller Tests
-on: 
+on:
   workflow_call:
     inputs:
-        test-cmd:
-          description: Command to run to test the controller project
-          required: false
-          type: string
-          default: test
-        before-tests:
-            description: Command to run before tests (e.g., setup commands like make commands)
-            required: false
-            type: string
-        after-tests:
-            description: Command to run after tests (e.g., cleanup commands)
-            required: false
-            type: string
-
+      test-cmd:
+        description: Space-separated Make targets (not shell code)
+        type: string
+        default: test
+      before-tests:
+        description: Supported setup command; only pnpm install --frozen-lockfile is accepted
+        type: string
+        default: ''
+      after-tests:
+        description: Deprecated; arbitrary shell hooks are not accepted
+        type: string
+        default: ''
+permissions:
+  contents: read
 env:
-  # Keep in sync with ENVTEST_K8S_VERSION in konfidence/Makefile
-  ENVTEST_K8S_VERSION: "1.33"
-
+  ENVTEST_K8S_VERSION: '1.33'
 jobs:
   controller-test:
     name: ${{ inputs.test-cmd }}
-    runs-on: konfidence-large
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Init Hermit
-        uses: cashapp/activate-hermit@v1
-
-      - name: Cache Go modules and build cache
-        uses: actions/cache@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Cache envtest binaries
-        uses: actions/cache@v6
-        with:
-          path: bin/k8s/
-          key: ${{ runner.os }}-envtest-${{ env.ENVTEST_K8S_VERSION }}
-
-      - name: Run script before tests
-        if: ${{ inputs.before-tests }}
-        run: ${{ inputs.before-tests }}
-
-      - name: Run Tests
+          persist-credentials: false
+      - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Prepare tests
+        env:
+          BEFORE_TESTS: ${{ inputs.before-tests }}
+          AFTER_TESTS: ${{ inputs.after-tests }}
         run: |
-          make ${{ inputs.test-cmd }}
-
-      - name: Run script after tests
-        if: ${{ inputs.after-tests }}
-        run: ${{ inputs.after-tests }}
+          [[ -z "$AFTER_TESTS" ]] || { echo 'Arbitrary after-tests hooks are not supported'; exit 1; }
+          case "$BEFORE_TESTS" in
+            '') ;;
+            'pnpm install --frozen-lockfile') pnpm install --frozen-lockfile ;;
+            *) echo 'Unsupported before-tests command'; exit 1 ;;
+          esac
+      - name: Run Tests
+        env:
+          TEST_TARGETS: ${{ inputs.test-cmd }}
+        run: |
+          [[ "$TEST_TARGETS" =~ ^[a-zA-Z0-9][a-zA-Z0-9_[:space:]-]*$ ]] || exit 1
+          read -r -a targets <<< "$TEST_TARGETS"
+          make -- "${targets[@]}"

@@ -9,19 +9,25 @@ on:
         type: string
         default: 'fmt vet manifests generate'
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint Golang
-    runs-on: konfidence-large
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Init Hermit
-        uses: cashapp/activate-hermit@v1
+        uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
 
       - name: Cache linting step
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             ~/.cache/golangci-lint
@@ -36,6 +42,12 @@ jobs:
           make lint
 
       - name: Check formatting and codegen
+        env:
+          CODEGEN_TARGETS: ${{ inputs.codegen-cmd }}
         run: |
-          make ${{ inputs.codegen-cmd }}
-          git diff --exit-code || { echo "Uncommitted changes detected after ${{ inputs.codegen-cmd }}. Run 'make ${{ inputs.codegen-cmd }}' locally and commit the results."; exit 1; }
+          if [[ -n "$CODEGEN_TARGETS" ]]; then
+            [[ "$CODEGEN_TARGETS" =~ ^[a-zA-Z0-9][a-zA-Z0-9_[:space:]-]*$ ]] || exit 1
+            read -r -a targets <<< "$CODEGEN_TARGETS"
+            make -- "${targets[@]}"
+          fi
+          git diff --exit-code || { echo "Generated files changed; run the configured Make targets locally."; exit 1; }

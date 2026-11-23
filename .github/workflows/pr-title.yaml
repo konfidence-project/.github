@@ -19,10 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout workflow tooling
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: konfidence-project/.github
-          ref: main
+          ref: eabccb89634f145fcc9668d2ea24f9c395b6c380 # reviewed workflow tooling
+          persist-credentials: false
           path: workflow-tooling
 
       - name: Validate PR title

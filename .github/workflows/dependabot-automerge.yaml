@@ -1,51 +1,33 @@
 name: Dependabot Automerge
-
-# Reusable automerge for Dependabot PRs (ADR-0033). Minor and patch updates
-# are queued for auto-merge with the konfidence-bot app token; majors wait
-# for a human. Merge happens only after required status checks pass.
-#
-# Callers must trigger on pull_request_target (Dependabot-triggered
-# pull_request runs cannot read Actions secrets) and pass `secrets: inherit`.
-# No code is checked out here, so the target's elevated context is safe.
-
+# Metadata only: never check out or execute pull request code.
+# Queue auto-merge, but never supply the human/code-owner approval.
 on:
   workflow_call:
   pull_request_target:
-
+permissions: {}
 jobs:
   automerge:
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.sender.id == 49699333 &&
+      github.event.pull_request.user.id == 49699333 &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
+      contents: write
+      pull-requests: write
     steps:
       - name: Fetch update metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v3
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Mint app token
-        id: app-token
+          github-token: ${{ github.token }}
+      - name: Enable auto-merge after required reviews and checks
         if: >-
-          contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'),
-          steps.metadata.outputs.update-type)
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ vars.GH_APP_ID }}
-          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-
-      - name: Approve
-        if: steps.app-token.outputs.token != ''
+          steps.metadata.outputs.package-ecosystem != 'github_actions' &&
+          contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'), steps.metadata.outputs.update-type)
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr review --approve "$PR_URL"
-
-      - name: Enable auto-merge
-        if: steps.app-token.outputs.token != ''
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --rebase "$PR_URL"
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: gh pr merge --auto --rebase --match-head-commit "$HEAD_SHA" "$PR_URL"

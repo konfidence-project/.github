@@ -22,9 +22,14 @@ on:
         type: string
         default: ghcr.io/konfidence-project
 
+permissions:
+  contents: read
+
 jobs:
   publish-helm-charts:
     name: Publish Helm Charts
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    environment: release
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,15 +38,20 @@ jobs:
       MODE: ${{ inputs.mode }}
       VERSION: ${{ inputs.version }}
       REGISTRY: ${{ inputs.registry }}
+      CHARTS: ${{ inputs.charts }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Init Hermit
-        uses: cashapp/activate-hermit@v1
+        uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
 
       - name: Log in to Helm Registry
-        run: echo "${{ github.token }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
 
       - name: Validate publishing mode
         run: |
@@ -59,7 +69,8 @@ jobs:
       - name: Validate Helm chart versions
         if: inputs.mode == 'release'
         run: |
-          for CHART in ${{ inputs.charts }}; do
+          read -r -a charts <<< "$CHARTS"
+          for CHART in "${charts[@]}"; do
             CHART_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
             APP_VERSION=$(yq -r '.appVersion' "${CHART}/Chart.yaml" | tr -d '"')
 
@@ -77,7 +88,8 @@ jobs:
       - name: Package and publish Helm charts
         run: |
           mkdir -p dist
-          for CHART in ${{ inputs.charts }}; do
+          read -r -a charts <<< "$CHARTS"
+          for CHART in "${charts[@]}"; do
             if [ "$MODE" = dev ]; then
               RELEASE_VERSION=$(yq -r '.version' "${CHART}/Chart.yaml")
               BASE_VERSION="${RELEASE_VERSION%%[-+]*}"
