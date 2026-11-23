@@ -17,3 +17,4 @@ jobs:
       - uses: konfidence-project/.github/.github/actions/goreleaser@4d42404fca8862353c7fa2d457142d82b10a0930 # hardened actions
         with:
           mode: pr
+          snapshot-tag: ${{ github.sha }}
