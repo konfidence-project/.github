@@ -43,7 +43,6 @@ jobs:
       - name: Verify tag points to main history
         shell: bash
         run: |
-          git fetch origin main
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "Release tag must point to a commit contained in main"
             exit 1
