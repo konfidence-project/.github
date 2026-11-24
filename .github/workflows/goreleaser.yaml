@@ -3,22 +3,17 @@ name: Build & Publish
 on:
   workflow_call:
     inputs:
-      runner:
-        description: Runner label for the GoReleaser job
-        required: false
-        type: string
-        default: ubuntu-latest
       registry:
         description: Container registry to log in to
         required: false
         type: string
         default: ghcr.io
       mode:
-        description: 'Build mode: "pr" (compile only), "main" (build + push images tagged with SHA), "release" (full release via goreleaser)'
+        description: 'Publishing mode: "main" (SHA-tagged images) or "release" (full release). PR builds must call goreleaser-pr.yaml.'
         required: true
         type: string
       snapshot-tag:
-        description: Tag to use for snapshot builds (e.g. git SHA). Leave empty for release mode.
+        description: Tag for main builds or the release-please tag. Leave empty for tag-triggered releases.
         required: false
         type: string
         default: ''
@@ -27,13 +22,32 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    name: Validate publish request
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Reject unsupported modes and untrusted events
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          case "$MODE" in
+            main|release) ;;
+            pr) echo '::error::PR builds must use goreleaser-pr.yaml; this workflow only publishes.'; exit 1 ;;
+            *) echo '::error::Publishing mode must be main or release.'; exit 1 ;;
+          esac
+          if [[ "$GITHUB_EVENT_NAME" != push ]]; then
+            echo '::error::Publishing requires a push to main or a release tag.'
+            exit 1
+          fi
+          case "$MODE:$GITHUB_REF" in
+            main:refs/heads/main|release:refs/heads/main|release:refs/tags/*) ;;
+            *) echo '::error::This ref is not eligible for the requested publishing mode.'; exit 1 ;;
+          esac
+
   goreleaser:
     name: Build & Publish
-    # Untrusted PR builds use goreleaser-pr.yaml, which requests no write token.
-    if: >-
-      github.event_name == 'push' &&
-      ((inputs.mode == 'main' && github.ref == 'refs/heads/main') ||
-       (inputs.mode == 'release' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))))
+    needs: validate
     runs-on: ubuntu-latest
     environment: release
     timeout-minutes: 45
@@ -47,12 +61,50 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Init Hermit
-        uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Activate repository Hermit environment
+        run: ./bin/hermit env --raw >> "$GITHUB_ENV"
 
-      - name: Build & Publish
-        uses: konfidence-project/.github/.github/actions/goreleaser@7ce51f5807984870589cf6221e7d331244a684ca # hardened actions, no shared binary cache
+      - name: Resolve publishing arguments
+        id: cfg
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          case "$MODE" in
+            main) echo 'args=release --clean --snapshot' >> "$GITHUB_OUTPUT" ;;
+            release) echo 'args=release --clean' >> "$GITHUB_OUTPUT" ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
-          mode: ${{ inputs.mode }}
           registry: ${{ inputs.registry }}
-          snapshot-tag: ${{ inputs.snapshot-tag }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+        with:
+          cache-binary: false
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: ${{ steps.cfg.outputs.args }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GORELEASER_CURRENT_TAG: ${{ inputs.snapshot-tag }}
+
+      - name: Push Docker images
+        if: inputs.mode == 'main'
+        run: |
+          IMAGES=$(jq -r '.[] | select(.type == "Docker Image") | .name' dist/artifacts.json)
+          echo "${IMAGES}" | xargs -I{} docker push {}
+          echo "${IMAGES}" | sed 's/-amd64$//;s/-arm64$//' | sort -u | while read -r BASE; do
+            ARCH_IMAGES=$(echo "${IMAGES}" | grep "^${BASE}-")
+            # shellcheck disable=SC2086
+            docker manifest create "${BASE}" ${ARCH_IMAGES}
+            docker manifest push "${BASE}"
+          done

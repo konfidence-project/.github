@@ -24,14 +24,15 @@ jobs:
       release_created: ${{ steps.release-please.outputs.release_created }}
       tag_name: ${{ steps.release-please.outputs.tag_name }}
     steps:
-      # pinned to a SHA, not the moving @v4: this workflow produces v4, so it
-      # must not depend on it — a broken v4 would take down the pipeline
-      # needed to fix v4
+      # Use a pinned upstream action so this release workflow does not depend
+      # on an unmerged commit or the release it is about to create.
       - id: auth
-        uses: konfidence-project/.github/.github/actions/github-app-auth@4d42404fca8862353c7fa2d457142d82b10a0930 # hardened actions
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
 

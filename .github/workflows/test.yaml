@@ -10,10 +10,6 @@ on:
         description: Supported setup command; only pnpm install --frozen-lockfile is accepted
         type: string
         default: ''
-      after-tests:
-        description: Deprecated; arbitrary shell hooks are not accepted
-        type: string
-        default: ''
 permissions:
   contents: read
 env:
@@ -27,13 +23,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Activate repository Hermit environment
+        run: ./bin/hermit env --raw >> "$GITHUB_ENV"
       - name: Prepare tests
         env:
           BEFORE_TESTS: ${{ inputs.before-tests }}
-          AFTER_TESTS: ${{ inputs.after-tests }}
         run: |
-          [[ -z "$AFTER_TESTS" ]] || { echo 'Arbitrary after-tests hooks are not supported'; exit 1; }
           case "$BEFORE_TESTS" in
             '') ;;
             'pnpm install --frozen-lockfile') pnpm install --frozen-lockfile ;;

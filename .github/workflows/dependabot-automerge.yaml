@@ -7,6 +7,8 @@ on:
 permissions: {}
 jobs:
   automerge:
+    # Immutable github.com account ID for dependabot[bot]. Check both the
+    # event sender and PR author; a human push to a bot-owned PR is not enough.
     if: >-
       github.event_name == 'pull_request_target' &&
       github.event.sender.id == 49699333 &&

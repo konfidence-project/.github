@@ -29,10 +29,12 @@ jobs:
         with:
           persist-credentials: false
       - id: auth
-        uses: konfidence-project/.github/.github/actions/github-app-auth@4d42404fca8862353c7fa2d457142d82b10a0930 # hardened actions
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
           permission-contents: write
       - name: Create and push the reviewed main commit tag
         env:

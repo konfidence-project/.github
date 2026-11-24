@@ -23,8 +23,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Init Hermit
-        uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Activate repository Hermit environment
+        run: ./bin/hermit env --raw >> "$GITHUB_ENV"
 
       - name: Cache linting step
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6

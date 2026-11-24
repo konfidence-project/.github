@@ -15,9 +15,6 @@ concurrency:
 jobs:
   release-please:
     name: Release PR
-    permissions:
-      contents: write
-      pull-requests: write
     uses: ./.github/workflows/release-please.yaml
     secrets:
       KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
@@ -37,11 +34,19 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
-      contents: write
+      contents: read
     env:
       TAG: ${{ needs.release-please.outputs.tag_name }}
-      GH_TOKEN: ${{ github.token }}
     steps:
+      - name: Require a new major for the breaking workflow API
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          MAJOR="${TAG%%.*}"
+          if [ "${MAJOR#v}" -lt 5 ]; then
+            echo '::error::This breaking workflow API must release as v5 or later; refusing to move v4.'
+            exit 1
+          fi
+
       # checkout the release tag, not github.sha — if this run replaced one
       # that was cancelled while queued, github.sha is newer than the release
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -49,13 +54,26 @@ jobs:
           ref: refs/tags/${{ needs.release-please.outputs.tag_name }}
           persist-credentials: false
 
+      - name: Create repository-scoped publishing token
+        id: auth
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        with:
+          client-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
       - name: Update major version tag
+        env:
+          GH_TOKEN: ${{ steps.auth.outputs.token }}
         run: |
-          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
           MAJOR="${TAG%%.*}"
           gh auth setup-git
           git tag -f "${MAJOR}"
           git push --force origin "${MAJOR}"
 
       - name: Undraft release
+        env:
+          GH_TOKEN: ${{ steps.auth.outputs.token }}
         run: gh release edit "${TAG}" --repo "${GITHUB_REPOSITORY}" --draft=false
