@@ -9,3 +9,5 @@
 /package.json @konfidence-project/kden-maintainer
 /pnpm-lock.yaml @konfidence-project/kden-maintainer
 /.goreleaser* @konfidence-project/kden-maintainer
+/.pre-commit-config.yaml @konfidence-project/kden-maintainer
+/renovate-config/ @konfidence-project/kden-maintainer
