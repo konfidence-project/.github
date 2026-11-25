@@ -82,6 +82,24 @@ class WorkflowContracts(unittest.TestCase):
                         self.assertEqual(result.returncode == 0, allowed, result.stdout + result.stderr)
         self.assertIn("    needs: validate", source("goreleaser.yaml"))
 
+    def test_publish_allows_only_release_mode_for_merged_release_prs(self):
+        script = shell_step("goreleaser.yaml", "Reject unsupported modes and untrusted events")
+        for mode in ["main", "release", "pr"]:
+            for event in ["pull_request", "pull_request_target", "workflow_dispatch"]:
+                for ref in ["refs/heads/main", "refs/heads/topic", "refs/tags/1.2.3"]:
+                    allowed = mode == "release" and event == "pull_request" and ref == "refs/heads/main"
+                    with self.subTest(mode=mode, event=event, ref=ref):
+                        result = execute(script, MODE=mode, GITHUB_EVENT_NAME=event,
+                                         GITHUB_REF=ref, MERGED_RELEASE_PR="true")
+                        self.assertEqual(result.returncode == 0, allowed, result.stdout + result.stderr)
+        for filename in ["goreleaser.yaml", "publish-helm-charts.yaml"]:
+            for guard in ["github.event_name == 'pull_request'", "github.event.action == 'closed'",
+                          "github.event.pull_request.merged == true",
+                          "github.event.pull_request.head.repo.full_name == github.repository",
+                          "contains(github.event.pull_request.labels.*.name, 'autorelease: pending')"]:
+                self.assertIn(guard, source(filename))
+            self.assertIn("environment: release", source(filename))
+
     def test_breaking_release_never_moves_v4(self):
         script = shell_step("release-please-pipeline.yaml", "Require a new major for the breaking workflow API")
         for tag, allowed in [("v4.8.1", False), ("v3.9.0", False), ("v5.0.0", True),
