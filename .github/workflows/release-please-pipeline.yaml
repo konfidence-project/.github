@@ -4,24 +4,40 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Ordinary pushes and unrelated PR closures must not replace a queued release.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ github.event.pull_request.head.label || 'main' }}
   cancel-in-progress: false
 
 jobs:
+  update-release-pr:
+    name: Update Release PR
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release-pr.yaml
+    secrets:
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+
   release-please:
-    name: Release PR
+    name: Create Release
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
     uses: ./.github/workflows/release-please.yaml
     secrets:
       KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
 
-  # Runs only on the push that merges a release PR. Retags the moving major
-  # version tag first, then removes the draft flag — consumers pinning @vN
-  # never see a published release the major tag doesn't cover yet.
+  # Runs only after approved release creation following a Release PR merge.
+  # Retags the moving major version first, then removes the draft flag —
+  # consumers pinning @vN never see a release the major tag doesn't cover yet.
   #
   # Recovery after a failure here: use "re-run failed jobs", NOT "re-run all
   # jobs" — a full re-run makes release-please report nothing (the release PR

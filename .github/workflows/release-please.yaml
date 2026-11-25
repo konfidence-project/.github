@@ -1,4 +1,4 @@
-name: Release PR
+name: Create Release
 on:
   workflow_call:
     secrets:
@@ -17,7 +17,13 @@ permissions:
 
 jobs:
   release-please:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.ref == 'refs/heads/main' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
     environment: release
     runs-on: ubuntu-latest
     outputs:
@@ -42,3 +48,5 @@ jobs:
           token: ${{ steps.auth.outputs.token }}
           config-file: .github/release-please/release-please-config.json
           manifest-file: .github/release-please/.release-please-manifest.json
+          target-branch: main
+          skip-github-pull-request: true

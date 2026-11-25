@@ -44,6 +44,30 @@ def execute(script, **env):
 
 
 class WorkflowContracts(unittest.TestCase):
+    def test_release_pr_updates_use_builtin_pr_only_mode(self):
+        text = source("release-pr.yaml")
+        self.assertIn("github.event_name == 'push' && github.ref == 'refs/heads/main'", text)
+        self.assertIn("skip-github-release: true", text)
+        self.assertNotIn("environment:", text)
+        self.assertNotIn("graphql", text)
+
+    def test_actual_release_requires_a_merged_release_pr(self):
+        text = source("release-please.yaml")
+        for guard in ["github.event_name == 'pull_request'", "github.event.action == 'closed'",
+                      "github.event.pull_request.merged == true", "github.ref == 'refs/heads/main'",
+                      "github.event.pull_request.head.repo.full_name == github.repository",
+                      "contains(github.event.pull_request.labels.*.name, 'autorelease: pending')"]:
+            self.assertIn(guard, text)
+        self.assertIn("environment: release", text)
+        self.assertIn("skip-github-pull-request: true", text)
+        self.assertNotIn("graphql", text)
+        caller = source("release-please-pipeline.yaml")
+        self.assertIn("types: [closed]", caller)
+        self.assertIn("uses: ./.github/workflows/release-pr.yaml", caller)
+        self.assertIn("uses: ./.github/workflows/release-please.yaml", caller)
+        self.assertIn("needs: [release-please]", caller)
+        self.assertIn("github.event.pull_request.head.label || 'main'", caller)
+
     def test_publish_event_mode_and_ref_matrix(self):
         script = shell_step("goreleaser.yaml", "Reject unsupported modes and untrusted events")
         for mode in ["main", "release", "pr", "unknown", "$(exit 0)"]:
@@ -102,7 +126,7 @@ class WorkflowContracts(unittest.TestCase):
         self.assertIn('git merge-base --is-ancestor "$GITHUB_SHA" origin/main', text)
 
     def test_app_tokens_are_explicitly_repository_scoped(self):
-        for name in ["release-please.yaml", "release-please-pipeline.yaml",
+        for name in ["release-pr.yaml", "release-please.yaml", "release-please-pipeline.yaml",
                      "prerelease-pipeline.yaml", "secret-scanning-review.yaml"]:
             with self.subTest(workflow=name):
                 text = source(name)

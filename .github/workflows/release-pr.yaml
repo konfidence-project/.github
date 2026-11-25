@@ -1,0 +1,34 @@
+name: Update Release PR
+
+on:
+  workflow_call:
+    secrets:
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  release-pr:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - id: auth
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        with:
+          client-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # Built-in PR-only mode: no tags or releases, and no approval gate.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
+        with:
+          token: ${{ steps.auth.outputs.token }}
+          target-branch: main
+          config-file: .github/release-please/release-please-config.json
+          manifest-file: .github/release-please/.release-please-manifest.json
+          skip-github-release: true
