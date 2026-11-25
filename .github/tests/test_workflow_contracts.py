@@ -48,7 +48,9 @@ class WorkflowContracts(unittest.TestCase):
         text = source("release-pr.yaml")
         self.assertIn("github.event_name == 'push' && github.ref == 'refs/heads/main'", text)
         self.assertIn("skip-github-release: true", text)
-        self.assertNotIn("environment:", text)
+        self.assertIn("environment: automation", text)
+        self.assertNotIn("environment: release", text)
+        self.assertIn("KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY:\n        required: true", text)
         self.assertNotIn("graphql", text)
 
     def test_actual_release_requires_a_merged_release_pr(self):
