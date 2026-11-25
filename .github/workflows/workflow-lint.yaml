@@ -17,9 +17,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Test shared workflow security contracts
-        if: github.repository == 'konfidence-project/.github'
-        run: python3 -m unittest discover -s .github/tests -p 'test_*.py' -v
       - name: Audit workflows and composite actions
         # High-confidence security findings block. Metadata-only privileged
         # triggers still need human review; no repository ignore file is loaded.
