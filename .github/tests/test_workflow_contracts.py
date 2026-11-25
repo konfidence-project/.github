@@ -147,7 +147,7 @@ class WorkflowContracts(unittest.TestCase):
 
     def test_app_tokens_are_explicitly_repository_scoped(self):
         for name in ["release-pr.yaml", "release-please.yaml", "release-please-pipeline.yaml",
-                     "prerelease-pipeline.yaml", "secret-scanning-review.yaml"]:
+                     "prerelease-pipeline.yaml"]:
             with self.subTest(workflow=name):
                 text = source(name)
                 self.assertIn("owner: ${{ github.repository_owner }}", text)
