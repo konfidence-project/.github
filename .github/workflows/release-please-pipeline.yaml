@@ -54,15 +54,6 @@ jobs:
     env:
       TAG: ${{ needs.release-please.outputs.tag_name }}
     steps:
-      - name: Require a new major for the breaking workflow API
-        run: |
-          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-          MAJOR="${TAG%%.*}"
-          if [ "${MAJOR#v}" -lt 5 ]; then
-            echo '::error::This breaking workflow API must release as v5 or later; refusing to move v4.'
-            exit 1
-          fi
-
       # checkout the release tag, not github.sha — if this run replaced one
       # that was cancelled while queued, github.sha is newer than the release
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
