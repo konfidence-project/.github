@@ -16,9 +16,6 @@ inputs:
   permission-pull-requests:
     description: Optional pull request permission
     required: false
-  permission-secret-scanning-alerts:
-    description: Optional secret scanning alerts permission
-    required: false
 outputs:
   token:
     description: Short-lived token; pass only to the step that needs it
@@ -36,4 +33,3 @@ runs:
         repositories: ${{ inputs.repositories || github.event.repository.name }}
         permission-contents: ${{ inputs.permission-contents }}
         permission-pull-requests: ${{ inputs.permission-pull-requests }}
-        permission-secret-scanning-alerts: ${{ inputs.permission-secret-scanning-alerts }}
