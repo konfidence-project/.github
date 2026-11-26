@@ -1,8 +1,12 @@
 name: Dependabot Automerge
 # Metadata only: never check out or execute pull request code.
-# Queue auto-merge, but never supply the human/code-owner approval.
+# Approve eligible dependency updates as the bot, then enable auto-merge.
+# Required checks and any applicable CODEOWNER reviews still apply.
 on:
   workflow_call:
+    secrets:
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY:
+        required: true
   pull_request_target:
 permissions: {}
 jobs:
@@ -11,25 +15,51 @@ jobs:
     # event sender and PR author; a human push to a bot-owned PR is not enough.
     if: >-
       github.event_name == 'pull_request_target' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.pull_request.base.ref == 'main' &&
       github.event.sender.id == 49699333 &&
       github.event.pull_request.user.id == 49699333 &&
       github.event.pull_request.head.repo.full_name == github.repository
+    environment: automation
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      pull-requests: read
     steps:
       - name: Fetch update metadata
         id: metadata
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
         with:
           github-token: ${{ github.token }}
-      - name: Enable auto-merge after required reviews and checks
+      - name: Mint repository-scoped approval token
+        id: app-token
         if: >-
+          steps.metadata.outputs.package-ecosystem != '' &&
           steps.metadata.outputs.package-ecosystem != 'github_actions' &&
           contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'), steps.metadata.outputs.update-type)
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        with:
+          client-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Approve the exact commit and enable auto-merge
+        if: steps.app-token.outputs.token != ''
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: gh pr merge --auto --rebase --match-head-commit "$HEAD_SHA" "$PR_URL"
+        run: |
+          set -euo pipefail
+          current=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+            --jq '[.state, .head.sha, .base.ref, (.draft | tostring)] | join(" ")')
+          if [[ "$current" != "open $HEAD_SHA main false" ]]; then
+            echo 'PR changed, closed, or became a draft; leaving it for a fresh run.'
+            exit 0
+          fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" \
+            -f event=APPROVE -f commit_id="$HEAD_SHA" --silent
+          gh pr merge --auto --rebase --match-head-commit "$HEAD_SHA" "$PR_URL"
