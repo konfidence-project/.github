@@ -73,47 +73,9 @@ jobs:
       - name: Activate repository Hermit environment
         run: ./bin/hermit env --raw >> "$GITHUB_ENV"
 
-      - name: Resolve publishing arguments
-        id: cfg
-        env:
-          MODE: ${{ inputs.mode }}
-        run: |
-          case "$MODE" in
-            main) echo 'args=release --clean --snapshot' >> "$GITHUB_OUTPUT" ;;
-            release) echo 'args=release --clean' >> "$GITHUB_OUTPUT" ;;
-            *) exit 1 ;;
-          esac
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+      - name: Build & Publish
+        uses: konfidence-project/.github/.github/actions/goreleaser@5e9b632f4421802e0e424b6340de6f13e50cba70 # reviewed helper candidate; retain/reconcile before release
         with:
+          mode: ${{ inputs.mode }}
           registry: ${{ inputs.registry }}
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-        with:
-          cache-binary: false
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
-        with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: ${{ steps.cfg.outputs.args }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GORELEASER_CURRENT_TAG: ${{ inputs.snapshot-tag }}
-
-      - name: Push Docker images
-        if: inputs.mode == 'main'
-        run: |
-          IMAGES=$(jq -r '.[] | select(.type == "Docker Image") | .name' dist/artifacts.json)
-          echo "${IMAGES}" | xargs -I{} docker push {}
-          echo "${IMAGES}" | sed 's/-amd64$//;s/-arm64$//' | sort -u | while read -r BASE; do
-            ARCH_IMAGES=$(echo "${IMAGES}" | grep "^${BASE}-")
-            # shellcheck disable=SC2086
-            docker manifest create "${BASE}" ${ARCH_IMAGES}
-            docker manifest push "${BASE}"
-          done
+          snapshot-tag: ${{ inputs.snapshot-tag }}

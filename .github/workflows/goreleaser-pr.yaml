@@ -15,18 +15,8 @@ jobs:
           fetch-depth: 0
       - name: Activate repository Hermit environment
         run: ./bin/hermit env --raw >> "$GITHUB_ENV"
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-        with:
-          cache-binary: false
-      # Direct upstream actions avoid depending on a commit from this PR to
-      # bootstrap the release that consumers will pin.
       - name: Build snapshot without publishing
-        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
+        uses: konfidence-project/.github/.github/actions/goreleaser@5e9b632f4421802e0e424b6340de6f13e50cba70 # reviewed helper candidate; retain/reconcile before release
         with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: build --clean --single-target --snapshot
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GORELEASER_CURRENT_TAG: ${{ github.sha }}
+          mode: pr
+          snapshot-tag: ${{ github.sha }}
