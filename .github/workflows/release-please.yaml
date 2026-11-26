@@ -30,8 +30,6 @@ jobs:
       release_created: ${{ steps.release-please.outputs.release_created }}
       tag_name: ${{ steps.release-please.outputs.tag_name }}
     steps:
-      # Reusable workflow: use the shared helper without checking out caller code.
-      # Reviewed helper candidate; retain/reconcile before the final release.
       - id: auth
         uses: konfidence-project/.github/.github/actions/github-app-auth@5e9b632f4421802e0e424b6340de6f13e50cba70
         with:
