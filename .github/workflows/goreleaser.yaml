@@ -58,7 +58,7 @@ jobs:
     name: Build & Publish
     needs: validate
     runs-on: ubuntu-latest
-    environment: release
+    environment: ${{ inputs.mode == 'main' && 'automation' || 'release' }}
     timeout-minutes: 45
     permissions:
       contents: write
