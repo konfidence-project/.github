@@ -37,11 +37,10 @@ jobs:
           steps.metadata.outputs.package-ecosystem != '' &&
           steps.metadata.outputs.package-ecosystem != 'github_actions' &&
           contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'), steps.metadata.outputs.update-type)
-        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        uses: konfidence-project/.github/.github/actions/github-app-auth@5e9b632f4421802e0e424b6340de6f13e50cba70
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
