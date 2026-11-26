@@ -30,14 +30,13 @@ jobs:
       release_created: ${{ steps.release-please.outputs.release_created }}
       tag_name: ${{ steps.release-please.outputs.tag_name }}
     steps:
-      # Use a pinned upstream action so this release workflow does not depend
-      # on an unmerged commit or the release it is about to create.
+      # Reusable workflow: use the shared helper without checking out caller code.
+      # Reviewed helper candidate; retain/reconcile before the final release.
       - id: auth
-        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        uses: konfidence-project/.github/.github/actions/github-app-auth@5e9b632f4421802e0e424b6340de6f13e50cba70
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
