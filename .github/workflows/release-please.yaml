@@ -1,6 +1,9 @@
-name: Release PR
+name: Create Release
 on:
   workflow_call:
+    secrets:
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY:
+        required: true
     outputs:
       release_created:
         description: '"true" when the merged release PR produced a tag and draft release'
@@ -9,27 +12,38 @@ on:
         description: Tag of the created release (e.g. 1.2.3)
         value: ${{ jobs.release-please.outputs.tag_name }}
 
+permissions:
+  contents: read
+
 jobs:
   release-please:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.ref == 'refs/heads/main' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    environment: release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     outputs:
       release_created: ${{ steps.release-please.outputs.release_created }}
       tag_name: ${{ steps.release-please.outputs.tag_name }}
     steps:
-      # pinned to a SHA, not the moving @v4: this workflow produces v4, so it
-      # must not depend on it — a broken v4 would take down the pipeline
-      # needed to fix v4
-      - uses: konfidence-project/.github/.github/actions/github-app-auth@6e6fceb7157f77584cc55e967e0a765ef8c65736 # v4.5.0
+      - id: auth
+        uses: konfidence-project/.github/.github/actions/github-app-auth@5e9b632f4421802e0e424b6340de6f13e50cba70
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - id: release-please
-        uses: googleapis/release-please-action@v5
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
-          token: ${{ env.GH_TOKEN }}
+          token: ${{ steps.auth.outputs.token }}
           config-file: .github/release-please/release-please-config.json
           manifest-file: .github/release-please/.release-please-manifest.json
+          target-branch: main
+          skip-github-pull-request: true

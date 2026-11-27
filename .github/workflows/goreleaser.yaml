@@ -3,44 +3,81 @@ name: Build & Publish
 on:
   workflow_call:
     inputs:
-      runner:
-        description: Runner label for the GoReleaser job
-        required: false
-        type: string
-        default: ubuntu-latest
       registry:
         description: Container registry to log in to
         required: false
         type: string
         default: ghcr.io
       mode:
-        description: 'Build mode: "pr" (compile only), "main" (build + push images tagged with SHA), "release" (full release via goreleaser)'
+        description: 'Publishing mode: "main" (SHA-tagged images) or "release" (full release). PR builds must call goreleaser-pr.yaml.'
         required: true
         type: string
       snapshot-tag:
-        description: Tag to use for snapshot builds (e.g. git SHA). Leave empty for release mode.
+        description: Tag for main builds or the release-please tag. Leave empty for tag-triggered releases.
         required: false
         type: string
         default: ''
 
+permissions:
+  contents: read
+
 jobs:
+  validate:
+    name: Validate publish request
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Reject unsupported modes and untrusted events
+        env:
+          MODE: ${{ inputs.mode }}
+          MERGED_RELEASE_PR: >-
+            ${{ github.event_name == 'pull_request' &&
+                github.event.action == 'closed' &&
+                github.event.pull_request.merged == true &&
+                github.event.pull_request.head.repo.full_name == github.repository &&
+                contains(github.event.pull_request.labels.*.name, 'autorelease: pending') }}
+        run: |
+          case "$MODE" in
+            main|release) ;;
+            pr) echo '::error::PR builds must use goreleaser-pr.yaml; this workflow only publishes.'; exit 1 ;;
+            *) echo '::error::Publishing mode must be main or release.'; exit 1 ;;
+          esac
+          # Allow pushes, or release-mode publication after a Release PR merges into main.
+          # That release path uses pull_request/closed, so a push-only check would reject it.
+          # All other events are rejected; push refs are restricted by the check below.
+          if [[ "$GITHUB_EVENT_NAME" != push ]] &&
+             ! [[ "$GITHUB_EVENT_NAME" == pull_request &&
+                  "${MERGED_RELEASE_PR:-false}" == true &&
+                  "$MODE" == release && "$GITHUB_REF" == refs/heads/main ]]; then
+            echo '::error::Publishing requires a trusted push or a merged Release PR on main.'
+            exit 1
+          fi
+          case "$MODE:$GITHUB_REF" in
+            main:refs/heads/main|release:refs/heads/main|release:refs/tags/*) ;;
+            *) echo '::error::This ref is not eligible for the requested publishing mode.'; exit 1 ;;
+          esac
+
   goreleaser:
     name: Build & Publish
-    runs-on: ${{ inputs.runner }}
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.mode == 'main' && 'automation' || 'release' }}
+    timeout-minutes: 45
     permissions:
       contents: write
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Init Hermit
-        uses: cashapp/activate-hermit@v1
+      - name: Activate repository Hermit environment
+        run: ./bin/hermit env --raw >> "$GITHUB_ENV"
 
       - name: Build & Publish
-        uses: konfidence-project/.github/.github/actions/goreleaser@v4
+        uses: konfidence-project/.github/.github/actions/goreleaser@5e9b632f4421802e0e424b6340de6f13e50cba70 # reviewed helper candidate; retain/reconcile before release
         with:
           mode: ${{ inputs.mode }}
           registry: ${{ inputs.registry }}

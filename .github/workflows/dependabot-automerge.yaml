@@ -1,20 +1,26 @@
 name: Dependabot Automerge
-
-# Reusable automerge for Dependabot PRs (ADR-0033). Minor and patch updates
-# are queued for auto-merge with the konfidence-bot app token; majors wait
-# for a human. Merge happens only after required status checks pass.
-#
-# Callers must trigger on pull_request_target (Dependabot-triggered
-# pull_request runs cannot read Actions secrets) and pass `secrets: inherit`.
-# No code is checked out here, so the target's elevated context is safe.
-
+# Metadata only: never check out or execute pull request code.
+# Approve eligible dependency updates as the bot, then enable auto-merge.
+# Required checks and any applicable CODEOWNER reviews still apply.
 on:
   workflow_call:
+    secrets:
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY:
+        required: true
   pull_request_target:
-
+permissions: {}
 jobs:
   automerge:
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    # Immutable github.com account ID for dependabot[bot]. Check both the
+    # event sender and PR author; a human push to a bot-owned PR is not enough.
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.sender.id == 49699333 &&
+      github.event.pull_request.user.id == 49699333 &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    environment: automation
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,30 +28,37 @@ jobs:
     steps:
       - name: Fetch update metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v3
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Mint app token
+          github-token: ${{ github.token }}
+      - name: Mint repository-scoped approval token
         id: app-token
         if: >-
-          contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'),
-          steps.metadata.outputs.update-type)
-        uses: actions/create-github-app-token@v3
+          steps.metadata.outputs.package-ecosystem != '' &&
+          steps.metadata.outputs.package-ecosystem != 'github_actions' &&
+          contains(fromJSON('["version-update:semver-minor", "version-update:semver-patch"]'), steps.metadata.outputs.update-type)
+        uses: konfidence-project/.github/.github/actions/github-app-auth@5e9b632f4421802e0e424b6340de6f13e50cba70
         with:
-          app-id: ${{ vars.GH_APP_ID }}
+          client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-
-      - name: Approve
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Approve the exact commit and enable auto-merge
         if: steps.app-token.outputs.token != ''
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr review --approve "$PR_URL"
-
-      - name: Enable auto-merge
-        if: steps.app-token.outputs.token != ''
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --rebase "$PR_URL"
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          current=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+            --jq '[.state, .head.sha, .base.ref, (.draft | tostring)] | join(" ")')
+          if [[ "$current" != "open $HEAD_SHA main false" ]]; then
+            echo 'PR changed, closed, or became a draft; leaving it for a fresh run.'
+            exit 0
+          fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" \
+            -f event=APPROVE -f commit_id="$HEAD_SHA" --silent
+          gh pr merge --auto --rebase --match-head-commit "$HEAD_SHA" "$PR_URL"

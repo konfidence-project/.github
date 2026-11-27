@@ -1,0 +1,10 @@
+/.github/ @konfidence-project/kden-maintainer
+/Makefile @konfidence-project/kden-maintainer
+/hack/ @konfidence-project/kden-maintainer
+/scripts/ @konfidence-project/kden-maintainer
+/bin/ @konfidence-project/kden-maintainer
+/package.json @konfidence-project/kden-maintainer
+/pnpm-lock.yaml @konfidence-project/kden-maintainer
+/.goreleaser* @konfidence-project/kden-maintainer
+/.pre-commit-config.yaml @konfidence-project/kden-maintainer
+/renovate-config/ @konfidence-project/kden-maintainer
