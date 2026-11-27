@@ -1,16 +1,5 @@
 # Changelog
 
-## [5.0.0](https://github.com/konfidence-project/.github/compare/v4.8.0...v5.0.0) (2026-11-27)
-
-
-### ⚠ BREAKING CHANGES
-
-* **ci:** harden shared Actions trust boundaries and release permissions ([#119](https://github.com/konfidence-project/.github/issues/119))
-
-### Bug Fixes
-
-* **ci:** harden shared Actions trust boundaries and release permissions ([#119](https://github.com/konfidence-project/.github/issues/119)) ([aba3305](https://github.com/konfidence-project/.github/commit/aba3305badd9b56c398e06a7ab4e01447b87d0a6))
-
 ## [4.8.0](https://github.com/konfidence-project/.github/compare/v4.7.1...v4.8.0) (2026-11-11)
 
 
