@@ -61,4 +61,5 @@ jobs:
           fi
           gh api --method POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" \
             -f event=APPROVE -f commit_id="$HEAD_SHA" --silent
-          gh pr merge --auto --rebase --match-head-commit "$HEAD_SHA" "$PR_URL"
+          # GitHub cannot automatically sign rebase merges.
+          gh pr merge --auto --squash --match-head-commit "$HEAD_SHA" "$PR_URL"
