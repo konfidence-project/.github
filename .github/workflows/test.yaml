@@ -6,10 +6,6 @@ on:
         description: Space-separated Make targets (not shell code)
         type: string
         default: test
-      before-tests:
-        description: Supported setup command; only pnpm install --frozen-lockfile is accepted
-        type: string
-        default: ''
 permissions:
   contents: read
 env:
@@ -25,15 +21,6 @@ jobs:
           persist-credentials: false
       - name: Activate repository Hermit environment
         run: ./bin/hermit env --raw >> "$GITHUB_ENV"
-      - name: Prepare tests
-        env:
-          BEFORE_TESTS: ${{ inputs.before-tests }}
-        run: |
-          case "$BEFORE_TESTS" in
-            '') ;;
-            'pnpm install --frozen-lockfile') pnpm install --frozen-lockfile ;;
-            *) echo 'Unsupported before-tests command'; exit 1 ;;
-          esac
       - name: Run Tests
         env:
           TEST_TARGETS: ${{ inputs.test-cmd }}
