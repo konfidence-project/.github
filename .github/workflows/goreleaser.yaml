@@ -42,6 +42,9 @@ jobs:
             pr) echo '::error::PR builds must use goreleaser-pr.yaml; this workflow only publishes.'; exit 1 ;;
             *) echo '::error::Publishing mode must be main or release.'; exit 1 ;;
           esac
+          # Allow pushes, or release-mode publication after a Release PR merges into main.
+          # That release path uses pull_request/closed, so a push-only check would reject it.
+          # All other events are rejected; push refs are restricted by the check below.
           if [[ "$GITHUB_EVENT_NAME" != push ]] &&
              ! [[ "$GITHUB_EVENT_NAME" == pull_request &&
                   "${MERGED_RELEASE_PR:-false}" == true &&
