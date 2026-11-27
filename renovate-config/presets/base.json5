@@ -18,6 +18,8 @@
     "vendir/"
   ],
   rangeStrategy: "bump",
+  // Use a merge method GitHub can sign.
+  automergeStrategy: "squash",
   enabledManagers: [
     "hermit",
     "helmv3",
