@@ -1,0 +1,23 @@
+name: Workflow security
+on:
+  workflow_call:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 6 * * 1'
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Audit workflows and composite actions
+        # High-confidence security findings block. Metadata-only privileged
+        # triggers still need human review; no repository ignore file is loaded.
+        run: pipx run --spec zizmor==1.33.1 zizmor --offline --no-config --no-ignores --min-severity high --min-confidence high .github

@@ -1,38 +1,35 @@
 name: GitHub App Authentication
-description: Authenticates GitHub CLI and Git using a short-lived GitHub App installation token
-
+description: Create a repository-scoped, downscoped installation token without persisting credentials
 inputs:
   client-id:
     required: true
-    description: Id of GitHub App used for token generation
+    description: GitHub App client ID
   private-key:
     required: true
-    description: Private key for konfidence-project GitHub App
+    description: GitHub App private key
   repositories:
+    description: Explicit comma-separated repository names; defaults to this repository
     required: false
-    description: Comma-separated repositories the token may access; defaults to the current repository
-
+  permission-contents:
+    description: Contents permission
+    default: read
+  permission-pull-requests:
+    description: Optional pull request permission
+    required: false
+outputs:
+  token:
+    description: Short-lived token; pass only to the step that needs it
+    value: ${{ steps.token.outputs.token }}
 runs:
   using: composite
   steps:
-    - name: Generate GitHub App Token
-      id: generate-token
-      uses: actions/create-github-app-token@v3
+    - name: Generate scoped GitHub App token
+      id: token
+      uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
       with:
         client-id: ${{ inputs.client-id }}
         private-key: ${{ inputs.private-key }}
         owner: ${{ github.repository_owner }}
         repositories: ${{ inputs.repositories || github.event.repository.name }}
-
-    - name: Persist GitHub App Token for Job
-      shell: bash
-      run: |
-        echo "GH_TOKEN=${{ steps.generate-token.outputs.token }}" >> $GITHUB_ENV
-
-    - name: Configure GitHub CLI and Git
-      shell: bash
-      run: |
-        # Configure GitHub CLI authentication
-        echo "Setting up GitHub CLI authentication..."
-        gh auth status
-        gh auth setup-git
+        permission-contents: ${{ inputs.permission-contents }}
+        permission-pull-requests: ${{ inputs.permission-pull-requests }}

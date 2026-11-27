@@ -1,0 +1,22 @@
+name: Build without publishing
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Activate repository Hermit environment
+        run: ./bin/hermit env --raw >> "$GITHUB_ENV"
+      - name: Build snapshot without publishing
+        uses: konfidence-project/.github/.github/actions/goreleaser@5e9b632f4421802e0e424b6340de6f13e50cba70 # reviewed helper candidate; retain/reconcile before release
+        with:
+          mode: pr
+          snapshot-tag: ${{ github.sha }}

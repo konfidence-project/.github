@@ -1,39 +1,46 @@
 name: Pre-release
-
 on:
   workflow_call:
     inputs:
       version:
-        description: 'Pre-release version (e.g. 1.0.0-rc.1)'
+        description: Pre-release version (e.g. 1.0.0-rc.1)
         required: true
         type: string
-
+    secrets:
+      KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY:
+        required: true
+permissions:
+  contents: read
 jobs:
   tag:
     name: Create Pre-release Tag
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    environment: release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Validate pre-release tag
-        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          VERSION="${{ inputs.version }}"
-          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+(\+[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Version '${VERSION}' is not a valid SemVer pre-release tag. Use X.Y.Z-<suffix> (e.g. 1.0.0-rc.1)."
-            exit 1
-          fi
-
-      - uses: konfidence-project/.github/.github/actions/github-app-auth@v4
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+(\+[0-9A-Za-z.-]+)?$ ]] || {
+            echo 'Expected X.Y.Z-<suffix>'; exit 1;
+          }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - id: auth
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
         with:
           client-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.KONFIDENCE_PROJECT_REPO_ACCESS_PRIVATE_KEY }}
-
-      - uses: actions/checkout@v7
-        with:
-          token: ${{ env.GH_TOKEN }}
-
-      - name: Create and push tag
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+      - name: Create and push the reviewed main commit tag
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ steps.auth.outputs.token }}
         run: |
-          git tag ${{ inputs.version }}
-          git push origin ${{ inputs.version }}
+          gh auth setup-git
+          git tag -- "$VERSION" "$GITHUB_SHA"
+          git push origin "refs/tags/$VERSION"
